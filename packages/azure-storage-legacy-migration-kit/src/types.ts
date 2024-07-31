@@ -4,7 +4,7 @@ import { BlobService } from "azure-storage";
 export type BlobServiceWithFallBack = {
   readonly primary: BlobService;
   readonly secondary?: BlobService;
-}
+};
 
 export type StorageError = Error & {
   readonly code?: string;
