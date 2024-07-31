@@ -1,0 +1,21 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "pipeline": {
+    "build": {
+      "inputs": ["src/**/*.ts", "tsup.config.js"],
+      "outputs": ["dist/**"],
+      "dependsOn": ["^build"]
+    },
+    "//#test": {},
+    "lint": {
+      "inputs": ["src/**/*.ts"],
+      "outputs": [],
+      "dependsOn": ["^build"]
+    },
+    "typecheck": {
+      "inputs": ["src/**/*.ts"],
+      "outputs": [],
+      "dependsOn": ["^build"]
+    }
+  }
+}

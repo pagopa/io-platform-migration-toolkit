@@ -1,7 +1,7 @@
 import { BlobService } from "azure-storage";
 
-// eslint-disable-next-line @typescript-eslint/naming-convention
-export interface BlobServiceWithFallBack {
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type BlobServiceWithFallBack = {
   readonly primary: BlobService;
   readonly secondary?: BlobService;
 }

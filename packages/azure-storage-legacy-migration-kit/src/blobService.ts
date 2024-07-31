@@ -1,10 +1,35 @@
 import { constant, pipe } from "fp-ts/lib/function";
+import * as AS from "azure-storage";
 import * as B from "fp-ts/boolean";
 import * as O from "fp-ts/Option";
 import * as TE from "fp-ts/TaskEither";
 import * as E from "fp-ts/Either";
 import { BlobService, StorageError } from "azure-storage";
+import * as t from "io-ts";
 import { BlobNotFoundCode, BlobServiceWithFallBack } from "./types";
+
+/**
+ *
+ * @param primaryConnectionString: The primary storage used for principal read/write IO
+ * @param secondaryConnectionString: Optional: The fallback storage used for migration purpose (i.e: read fallback)
+ * @returns Both primary and secondary blob services while needed.
+ */
+export const createBlobService = (
+  primaryConnectionString: string,
+  secondaryConnectionString?: string
+): BlobServiceWithFallBack =>
+  pipe(
+    secondaryConnectionString,
+    O.fromNullable,
+    O.map(conn => ({
+      secondary: AS.createBlobService(conn)
+    })),
+    O.getOrElseW(() => ({})),
+    secondaryConfig => ({
+      primary: AS.createBlobService(primaryConnectionString),
+      ...secondaryConfig
+    })
+  );
 
 export const doesBlobExist = (
   blobServiceWithFallback: BlobServiceWithFallBack,
@@ -165,3 +190,47 @@ export const getBlobAsTextWithError = (
     ),
     constant
   );
+/**
+ * Get a blob content as a typed (io-ts) object.
+ *
+ * @param blobService     the Azure blob service
+ * @param containerName   the name of the Azure blob storage container
+ * @param blobName        blob file name
+ */
+export const getBlobAsObject = async <A, O, I>(
+  type: t.Type<A, O, I>,
+  blobService: BlobServiceWithFallBack,
+  containerName: string,
+  blobName: string,
+  options: BlobService.GetBlobRequestOptions = {}
+): Promise<E.Either<Error, O.Option<A>>> => {
+  const errorOrMaybeText = await getBlobAsText(
+    blobService,
+    containerName,
+    blobName,
+    options
+  )();
+  return pipe(
+    errorOrMaybeText,
+    E.chain(maybeText => {
+      if (O.isNone(maybeText)) {
+        return E.right(O.none);
+      }
+
+      const text = maybeText.value;
+      try {
+        const json = JSON.parse(text);
+        return pipe(
+          type.decode(json),
+          E.fold(
+            err => E.left(new Error(err.join("|"))),
+            _ => E.right(O.some(_))
+          )
+        );
+      } catch (e) {
+        // e will always be an instance of SyntaxError here which is a subclass of Error
+        return E.left(e as Error);
+      }
+    })
+  );
+};
