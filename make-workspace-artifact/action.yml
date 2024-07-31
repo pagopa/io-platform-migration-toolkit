@@ -1,0 +1,72 @@
+name: "Make workspace artifact"
+description: "This action creates an artifact for the selected workspace."
+
+inputs:
+  workspace-name:
+    description: The name of the workspace to create the artifact for"
+    required: true
+  workspace-type:
+    description: |
+      The type of the workspace to create the artifact for.
+      Will be inferred if not provided.
+      The supported workspace types are: function-app, next-standalone, package
+    required: false
+outputs:
+  artifact-path:
+    description: The path to the created artifact
+    value: ${{ steps[format('make-{0}-artifact', steps.detect-workspace-type.outputs.workspace-type)].outputs.artifact-path }}
+runs:
+  using: "composite"
+  steps:
+    # If not provided, try to detect the type of the workspace from its content.
+    - name: Set workspace type
+      id: detect-workspace-type
+      run: |
+        if [ -n "${{ inputs.workspace-type }}" ]; then
+          echo "workspace-type=${{ inputs.workspace-type }}" >> "$GITHUB_OUTPUT"
+        elif [ -e "host.json" ]; then
+          echo "::debug:: the workspace contains an azure function app"
+          echo "workspace-type=function-app" >> "$GITHUB_OUTPUT"
+        elif [ -e "next.config.js" ] && grep -q 'output: "standalone"' "next.config.js"; then
+          echo "::debug:: the workspace contains a next standalone app"
+          echo "workspace-type=next-standalone" >> "$GITHUB_OUTPUT"
+        else
+          echo "::error:: workspace not supported (should be a azure function app or a next standalone application)"
+          exit 1
+        fi
+      shell: bash
+      working-directory: ./out/apps/${{ inputs.workspace-name }}
+
+    - name: Make the next standalone app artifact
+      if: ${{ steps.detect-workspace-type.outputs.workspace-type == 'next-standalone' }}
+      id: make-next-standalone-artifact
+      run: |
+        mv .next/static .next/standalone/apps/${{ inputs.workspace-name }}/.next/
+        cd .next/standalone/apps/${{ inputs.workspace-name }} 
+        zip -r ${{ inputs.workspace-name }}.zip .
+        echo "artifact-path=$(realpath ${{ inputs.workspace-name }}.zip)" >> "$GITHUB_OUTPUT"
+      shell: bash
+      working-directory: ./out/apps/${{ inputs.workspace-name }}
+
+    - name: Make the azure function app artifact
+      if: ${{ steps.detect-workspace-type.outputs.workspace-type == 'function-app' }}
+      id: make-function-app-artifact
+      run: |
+        npm pkg set --json "bundledDependencies"=true
+        npm pkg set --json "files"='["**/function.json", "dist", "host.json","extensions.csproj"]'
+        npx npm-pack-zip
+        echo "artifact-path=$(realpath ${{ inputs.workspace-name }}.zip)" >> "$GITHUB_OUTPUT"
+      shell: bash
+      working-directory: ./out/apps/${{ inputs.workspace-name }}
+
+    - name: Make the package artifact
+      if: ${{ steps.detect-workspace-type.outputs.workspace-type == 'package' }}
+      id: make-package-artifact
+      run: |
+        # Bundle a package tarball for the selected workspace.
+        # The tarball will be created in the root of the workspace.
+        # The filename already contains the extension .
+        filename=$(npm pack --workspace ${{ inputs.workspace-name }} | jq -r '.[0].filename')
+        echo "artifact-path=$(realpath $filename)" >> "$GITHUB_OUTPUT"
+      shell: bash
+      working-directory: ./out/apps/${{ inputs.workspace-name }}

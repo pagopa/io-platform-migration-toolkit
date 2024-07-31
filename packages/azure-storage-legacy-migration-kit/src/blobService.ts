@@ -4,7 +4,6 @@ import * as B from "fp-ts/boolean";
 import * as O from "fp-ts/Option";
 import * as TE from "fp-ts/TaskEither";
 import * as E from "fp-ts/Either";
-import { BlobService, StorageError } from "azure-storage";
 import * as t from "io-ts";
 import { BlobNotFoundCode, BlobServiceWithFallBack } from "./types";
 
@@ -21,13 +20,13 @@ export const createBlobService = (
   pipe(
     secondaryConnectionString,
     O.fromNullable,
-    O.map(conn => ({
-      secondary: AS.createBlobService(conn)
+    O.map((conn) => ({
+      secondary: AS.createBlobService(conn),
     })),
     O.getOrElseW(() => ({})),
-    secondaryConfig => ({
+    (secondaryConfig) => ({
       primary: AS.createBlobService(primaryConnectionString),
-      ...secondaryConfig
+      ...secondaryConfig,
     })
   );
 
@@ -35,12 +34,12 @@ export const doesBlobExist = (
   blobServiceWithFallback: BlobServiceWithFallBack,
   containerName: string,
   blobName: string
-): TE.TaskEither<Error, BlobService.BlobResult> =>
+): TE.TaskEither<Error, AS.BlobService.BlobResult> =>
   pipe(
-    TE.taskify<Error, BlobService.BlobResult>(cb =>
+    TE.taskify<Error, AS.BlobService.BlobResult>((cb) =>
       blobServiceWithFallback.primary.doesBlobExist(containerName, blobName, cb)
     )(),
-    TE.chain(primaryRes =>
+    TE.chain((primaryRes) =>
       pipe(
         primaryRes.exists === true,
         B.fold(
@@ -48,8 +47,8 @@ export const doesBlobExist = (
             pipe(
               blobServiceWithFallback.secondary,
               O.fromNullable,
-              O.map(fallback =>
-                TE.taskify<Error, BlobService.BlobResult>(cb =>
+              O.map((fallback) =>
+                TE.taskify<Error, AS.BlobService.BlobResult>((cb) =>
                   fallback.doesBlobExist(containerName, blobName, cb)
                 )()
               ),
@@ -66,10 +65,10 @@ export const upsertBlobFromText = (
   containerName: string,
   blobName: string,
   text: string | Buffer,
-  options: BlobService.CreateBlobRequestOptions = {}
-): TE.TaskEither<Error, O.Option<BlobService.BlobResult>> =>
+  options: AS.BlobService.CreateBlobRequestOptions = {}
+): TE.TaskEither<Error, O.Option<AS.BlobService.BlobResult>> =>
   pipe(
-    TE.taskify<Error, BlobService.BlobResult>(cb =>
+    TE.taskify<Error, AS.BlobService.BlobResult>((cb) =>
       blobService.primary.createBlockBlobFromText(
         containerName,
         blobName,
@@ -85,11 +84,11 @@ export const getBlobAsText = (
   blobService: BlobServiceWithFallBack,
   containerName: string,
   blobName: string,
-  options: BlobService.GetBlobRequestOptions = {}
+  options: AS.BlobService.GetBlobRequestOptions = {}
 ): TE.TaskEither<Error, O.Option<string>> =>
   pipe(
     // eslint-disable-next-line sonarjs/cognitive-complexity
-    new Promise<E.Either<Error, O.Option<string>>>(resolve => {
+    new Promise<E.Either<Error, O.Option<string>>>((resolve) => {
       blobService.primary.getBlobToText(
         containerName,
         blobName,
@@ -97,7 +96,7 @@ export const getBlobAsText = (
         (err, result, __) => {
           if (err) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const errorAsStorageError = err as StorageError;
+            const errorAsStorageError = err as AS.StorageError;
             if (
               errorAsStorageError.code !== undefined &&
               errorAsStorageError.code === BlobNotFoundCode
@@ -105,14 +104,14 @@ export const getBlobAsText = (
               return pipe(
                 blobService.secondary,
                 O.fromNullable,
-                O.map(fallback =>
+                O.map((fallback) =>
                   fallback.getBlobToText(
                     containerName,
                     blobName,
                     options,
                     (e, r, ___) => {
                       if (e) {
-                        const storageError = e as StorageError;
+                        const storageError = e as AS.StorageError;
                         if (
                           storageError.code !== undefined &&
                           storageError.code === BlobNotFoundCode
@@ -145,51 +144,53 @@ export const getBlobAsText = (
         }
       );
     }),
-    promise => TE.tryCatch(() => promise, E.toError),
+    (promise) => TE.tryCatch(() => promise, E.toError),
     TE.chain(TE.fromEither)
   );
 
-export const getBlobAsTextWithError = (
-  blobService: BlobServiceWithFallBack,
-  containerName: string,
-  options: BlobService.GetBlobRequestOptions = {}
-) => (blobName: string): TE.TaskEither<StorageError, O.Option<string>> =>
-  pipe(
-    new Promise<E.Either<StorageError, O.Option<string>>>(resolve =>
-      blobService.primary.getBlobToText(
-        containerName,
-        blobName,
-        options,
-        (err, result, _) =>
-          err
-            ? resolve(E.left(err))
-            : pipe(
-                result,
-                O.fromNullable,
-                O.map(res => resolve(E.right(O.fromNullable(res)))),
-                O.getOrElse(() =>
-                  pipe(
-                    blobService.secondary,
-                    O.fromNullable,
-                    O.map(fallback =>
-                      fallback.getBlobToText(
-                        containerName,
-                        blobName,
-                        options,
-                        (e, r, __) =>
-                          e
-                            ? resolve(E.left(e))
-                            : resolve(E.right(O.fromNullable(r)))
-                      )
-                    ),
-                    O.getOrElse(() => resolve(E.right(O.none)))
+export const getBlobAsTextWithError =
+  (
+    blobService: BlobServiceWithFallBack,
+    containerName: string,
+    options: AS.BlobService.GetBlobRequestOptions = {}
+  ) =>
+  (blobName: string): TE.TaskEither<AS.StorageError, O.Option<string>> =>
+    pipe(
+      new Promise<E.Either<AS.StorageError, O.Option<string>>>((resolve) =>
+        blobService.primary.getBlobToText(
+          containerName,
+          blobName,
+          options,
+          (err, result, _) =>
+            err
+              ? resolve(E.left(err))
+              : pipe(
+                  result,
+                  O.fromNullable,
+                  O.map((res) => resolve(E.right(O.fromNullable(res)))),
+                  O.getOrElse(() =>
+                    pipe(
+                      blobService.secondary,
+                      O.fromNullable,
+                      O.map((fallback) =>
+                        fallback.getBlobToText(
+                          containerName,
+                          blobName,
+                          options,
+                          (e, r, __) =>
+                            e
+                              ? resolve(E.left(e))
+                              : resolve(E.right(O.fromNullable(r)))
+                        )
+                      ),
+                      O.getOrElse(() => resolve(E.right(O.none)))
+                    )
                   )
                 )
-              )
-      )
-    ),
-    constant
-  );
+        )
+      ),
+      constant
+    );
 /**
  * Get a blob content as a typed (io-ts) object.
  *
@@ -202,7 +203,7 @@ export const getBlobAsObject = async <A, O, I>(
   blobService: BlobServiceWithFallBack,
   containerName: string,
   blobName: string,
-  options: BlobService.GetBlobRequestOptions = {}
+  options: AS.BlobService.GetBlobRequestOptions = {}
 ): Promise<E.Either<Error, O.Option<A>>> => {
   const errorOrMaybeText = await getBlobAsText(
     blobService,
@@ -212,7 +213,7 @@ export const getBlobAsObject = async <A, O, I>(
   )();
   return pipe(
     errorOrMaybeText,
-    E.chain(maybeText => {
+    E.chain((maybeText) => {
       if (O.isNone(maybeText)) {
         return E.right(O.none);
       }
@@ -223,8 +224,8 @@ export const getBlobAsObject = async <A, O, I>(
         return pipe(
           type.decode(json),
           E.fold(
-            err => E.left(new Error(err.join("|"))),
-            _ => E.right(O.some(_))
+            (err) => E.left(new Error(err.join("|"))),
+            (_) => E.right(O.some(_))
           )
         );
       } catch (e) {
