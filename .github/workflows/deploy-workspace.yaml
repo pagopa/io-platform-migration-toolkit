@@ -9,6 +9,7 @@ on:
       environment:
         required: true
         type: string
+        default: prod
 
 jobs:
   build:
