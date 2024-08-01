@@ -137,8 +137,47 @@ export const getBlobAsText = (
             }
             return resolve(E.left<Error, O.Option<string>>(err));
           } else {
-            return resolve(
-              E.right<Error, O.Option<string>>(O.fromNullable(result))
+            return pipe(
+              result,
+              O.fromNullable,
+              O.map((firstRes) => resolve(E.right(O.some(firstRes)))),
+              O.getOrElse(() =>
+                pipe(
+                  blobService.secondary,
+                  O.fromNullable,
+                  O.map((fallback) =>
+                    fallback.getBlobToText(
+                      containerName,
+                      blobName,
+                      options,
+                      (er, re, ___) => {
+                        if (er) {
+                          const storageError = er as AS.StorageError;
+                          if (
+                            storageError.code !== undefined &&
+                            storageError.code === BlobNotFoundCode
+                          ) {
+                            return resolve(
+                              E.right<Error, O.Option<string>>(O.none)
+                            );
+                          } else {
+                            return resolve(E.left<Error, O.Option<string>>(er));
+                          }
+                        } else {
+                          return resolve(
+                            E.right<Error, O.Option<string>>(O.fromNullable(re))
+                          );
+                        }
+                      }
+                    )
+                  ),
+                  O.getOrElse(() =>
+                    resolve(
+                      E.right<Error, O.Option<string>>(O.fromNullable(result))
+                    )
+                  )
+                )
+              )
             );
           }
         }
