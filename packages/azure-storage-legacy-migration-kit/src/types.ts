@@ -15,3 +15,5 @@ export type StorageError = Error & {
 // Code used by blobService when a blob is not found
 export const GenericCode = "GenericCode";
 export const BlobNotFoundCode = "BlobNotFound";
+
+export type FallbackTracker = (containerName: string, blobName: string) => void;

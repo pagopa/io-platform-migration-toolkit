@@ -38,6 +38,10 @@ const blobServiceWithFallback = {
 };
 
 const TimeOutError = "Connection Timed Out";
+const trackerFnMock = vi.fn().mockImplementation((containerName, blobName) =>
+  // eslint-disable-next-line no-console
+  console.log(`Fallback blobName ${blobName} in container ${containerName}`)
+);
 
 afterEach(() => {
   vi.resetAllMocks();
@@ -88,16 +92,18 @@ describe("doesBlobExists", () => {
     const res = await doesBlobExist(
       blobServiceWithFallbackOnlyPrimary,
       "",
-      ""
+      "",
+      trackerFnMock
     )();
     expect(E.isRight(res)).toBeTruthy();
     pipe(
       res,
-      E.map((blobResult) =>
+      E.map((blobResult) => {
         expect(blobResult).toEqual({
           exists: true,
-        })
-      )
+        });
+        expect(trackerFnMock).not.toHaveBeenCalled();
+      })
     );
   });
 
@@ -112,15 +118,22 @@ describe("doesBlobExists", () => {
         exists: true,
       })
     );
-    const res = await doesBlobExist(blobServiceWithFallback, "", "")();
+    const res = await doesBlobExist(
+      blobServiceWithFallback,
+      "cont",
+      "blob",
+      trackerFnMock
+    )();
     expect(E.isRight(res)).toBeTruthy();
     pipe(
       res,
-      E.map((secondaryBlobResult) =>
+      E.map((secondaryBlobResult) => {
         expect(secondaryBlobResult).toEqual({
           exists: true,
-        })
-      )
+        });
+        expect(trackerFnMock).toHaveBeenCalled();
+        expect(trackerFnMock).toHaveBeenCalledWith("cont", "blob");
+      })
     );
   });
 });
@@ -226,7 +239,9 @@ describe("getBlobAsText", () => {
     const res = await getBlobAsText(
       blobServiceWithFallbackOnlyPrimary,
       "",
-      ""
+      "",
+      {},
+      trackerFnMock
     )();
     expect(E.isRight(res)).toBeTruthy();
     pipe(
@@ -234,6 +249,7 @@ describe("getBlobAsText", () => {
       E.map((res) => {
         expect(res).toBe(O.none);
         expect(getBlobToTextSecondaryMock).not.toHaveBeenCalled();
+        expect(trackerFnMock).not.toHaveBeenCalled();
       })
     );
   });
@@ -251,13 +267,21 @@ describe("getBlobAsText", () => {
     getBlobToTextSecondaryMock.mockImplementationOnce((_, __, ___, cb) =>
       cb(undefined, "blobContent")
     );
-    const res = await getBlobAsText(blobServiceWithFallback, "", "")();
+    const res = await getBlobAsText(
+      blobServiceWithFallback,
+      "",
+      "",
+      {},
+      trackerFnMock
+    )();
     expect(E.isRight(res)).toBeTruthy();
     pipe(
       res,
       E.map((res) => {
         expect(res).toEqual(O.some("blobContent"));
         expect(getBlobToTextSecondaryMock).toHaveBeenCalled();
+        expect(trackerFnMock).toHaveBeenCalled();
+        expect(trackerFnMock).toHaveBeenCalledWith("", "");
       })
     );
   });
@@ -270,13 +294,21 @@ describe("getBlobAsText", () => {
     getBlobToTextSecondaryMock.mockImplementationOnce((_, __, ___, cb) =>
       cb(undefined, "blobContent")
     );
-    const res = await getBlobAsText(blobServiceWithFallback, "", "")();
+    const res = await getBlobAsText(
+      blobServiceWithFallback,
+      "",
+      "",
+      {},
+      trackerFnMock
+    )();
     expect(E.isRight(res)).toBeTruthy();
     pipe(
       res,
       E.map((res) => {
         expect(res).toEqual(O.some("blobContent"));
         expect(getBlobToTextSecondaryMock).toHaveBeenCalled();
+        expect(trackerFnMock).toHaveBeenCalled();
+        expect(trackerFnMock).toHaveBeenCalledWith("", "");
       })
     );
   });
