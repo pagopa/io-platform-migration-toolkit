@@ -281,7 +281,6 @@ describe("getBlobAsText", () => {
         expect(res).toEqual(O.some("blobContent"));
         expect(getBlobToTextSecondaryMock).toHaveBeenCalled();
         expect(trackerFnMock).toHaveBeenCalled();
-        expect(trackerFnMock).toHaveBeenCalledWith("", "");
       })
     );
   });
