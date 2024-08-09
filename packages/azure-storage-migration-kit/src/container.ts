@@ -1,10 +1,11 @@
 import * as SB from "@azure/storage-blob";
 import { pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/Option";
+import { BlobClientWithFallback, BlockBlobClientWithFallback } from "./blob";
 
 export class ContainerClientWithFallBack {
-  private primaryContainerClient: SB.ContainerClient;
-  private fallbackContainerClient?: SB.ContainerClient;
+  primaryContainerClient: SB.ContainerClient;
+  fallbackContainerClient?: SB.ContainerClient;
 
   constructor(
     primaryConnectionString: string,
@@ -25,37 +26,27 @@ export class ContainerClientWithFallBack {
     );
   }
 
-  public getBlobClient(blobName: string): SB.BlobClient {
-    return pipe(
+  getBlobClient = (blobName: string): BlobClientWithFallback =>
+    new BlobClientWithFallback(
       this.primaryContainerClient.getBlobClient(blobName),
-      O.fromNullable,
-      O.getOrElse(() =>
-        pipe(
-          this.fallbackContainerClient,
-          O.fromNullable,
-          O.map((fc) => fc.getBlobClient(blobName)),
-          O.toUndefined,
-          (client) => client as SB.BlobClient
-        )
+      pipe(
+        this.fallbackContainerClient,
+        O.fromNullable,
+        O.map((fc) => fc.getBlobClient(blobName)),
+        O.toUndefined
       )
     );
-  }
 
-  public getBlockBlobClient(blobName: string): SB.BlockBlobClient {
-    return pipe(
+  getBlockBlobClient = (blobName: string): BlockBlobClientWithFallback =>
+    new BlockBlobClientWithFallback(
       this.primaryContainerClient.getBlockBlobClient(blobName),
-      O.fromNullable,
-      O.getOrElse(() =>
-        pipe(
-          this.fallbackContainerClient,
-          O.fromNullable,
-          O.map((fc) => fc.getBlockBlobClient(blobName)),
-          O.toUndefined,
-          (client) => client as SB.BlockBlobClient
-        )
+      pipe(
+        this.fallbackContainerClient,
+        O.fromNullable,
+        O.map((fc) => fc.getBlockBlobClient(blobName)),
+        O.toUndefined
       )
     );
-  }
 
   public uploadBlockBlob(
     blobName: string,
