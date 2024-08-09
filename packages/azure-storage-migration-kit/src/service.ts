@@ -15,6 +15,26 @@ export class BlobServiceClientWithFallBack {
     this.primaryBlobServiceClient = primaryBlobServiceClient;
     this.fallbackBlobServiceClient = fallbackBlobServiceClient;
   }
+
+  static fromConnectionString = (
+    primaryConnectionString: string,
+    fallbackConnectionString?: string,
+    options?: SB.StoragePipelineOptions
+  ): BlobServiceClientWithFallBack =>
+    new BlobServiceClientWithFallBack(
+      SB.BlobServiceClient.fromConnectionString(
+        primaryConnectionString,
+        options
+      ),
+      pipe(
+        fallbackConnectionString,
+        O.fromNullable,
+        O.map((connStr) =>
+          SB.BlobServiceClient.fromConnectionString(connStr, options)
+        ),
+        O.toUndefined
+      )
+    );
   
   // see https://github.com/Azure/azure-sdk-for-js/blob/e92fbde81c9c30a831fa2f502e47835381007097/sdk/storage/storage-blob/src/BlobServiceClient.ts#L482
   getContainerClient = (containerName: string) =>
@@ -48,24 +68,4 @@ export class PasswordLessBlobServiceClientWithFallBack extends BlobServiceClient
       )
     );
   }
-
-  static fromConnectionString = (
-    primaryConnectionString: string,
-    fallbackConnectionString?: string,
-    options?: SB.StoragePipelineOptions
-  ): BlobServiceClientWithFallBack =>
-    new BlobServiceClientWithFallBack(
-      SB.BlobServiceClient.fromConnectionString(
-        primaryConnectionString,
-        options
-      ),
-      pipe(
-        fallbackConnectionString,
-        O.fromNullable,
-        O.map((connStr) =>
-          SB.BlobServiceClient.fromConnectionString(connStr, options)
-        ),
-        O.toUndefined
-      )
-    );
 }
