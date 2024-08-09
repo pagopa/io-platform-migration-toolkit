@@ -11,8 +11,7 @@
     "format": "prettier --write .",
     "lint": "eslint \"src/**\"",
     "lint:fix": "eslint --fix \"src/**\"",
-    "typecheck": "tsc",
-    "run-test": "ts-node src/test.ts"
+    "typecheck": "tsc"
   },
   "dependencies": {
     "@azure/core-auth": "^1.7.2",
