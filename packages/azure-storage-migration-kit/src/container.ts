@@ -3,27 +3,16 @@ import { pipe } from "fp-ts/lib/function";
 import * as O from "fp-ts/Option";
 import { BlobClientWithFallback, BlockBlobClientWithFallback } from "./blob";
 
-export class ContainerClientWithFallBack {
+export class BaseContainerClientWithFallback {
   primaryContainerClient: SB.ContainerClient;
   fallbackContainerClient?: SB.ContainerClient;
 
   constructor(
-    primaryConnectionString: string,
-    containerName: string,
-    fallbackConnectionString?: string,
-    options?: SB.StoragePipelineOptions
+    primaryContainerClient: SB.ContainerClient,
+    fallbackContainerClient?: SB.ContainerClient
   ) {
-    this.primaryContainerClient = new SB.ContainerClient(
-      primaryConnectionString,
-      containerName,
-      options
-    );
-    this.fallbackContainerClient = pipe(
-      fallbackConnectionString,
-      O.fromNullable,
-      O.map((conn) => new SB.ContainerClient(conn, containerName, options)),
-      O.toUndefined
-    );
+    this.primaryContainerClient = primaryContainerClient;
+    this.fallbackContainerClient = fallbackContainerClient;
   }
 
   getBlobClient = (blobName: string): BlobClientWithFallback =>
@@ -62,6 +51,25 @@ export class ContainerClientWithFallBack {
       body,
       contentLength,
       options
+    );
+  }
+}
+
+export class ContainerClientFromConnectionStringWithFallBack extends BaseContainerClientWithFallback {
+  constructor(
+    primaryConnectionString: string,
+    containerName: string,
+    fallbackConnectionString?: string,
+    options?: SB.StoragePipelineOptions
+  ) {
+    super(
+      new SB.ContainerClient(primaryConnectionString, containerName, options),
+      pipe(
+        fallbackConnectionString,
+        O.fromNullable,
+        O.map((conn) => new SB.ContainerClient(conn, containerName, options)),
+        O.toUndefined
+      )
     );
   }
 }
