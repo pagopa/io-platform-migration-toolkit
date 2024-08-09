@@ -17,7 +17,7 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
     this.fallbackBlobClient = fallbackBlobClient;
   }
 
- exists = (): Promise<boolean> =>
+  exists = (): Promise<boolean> =>
     pipe(
       BU.exists(this.primaryBlobClient),
       TE.chain((exists) =>
@@ -41,9 +41,7 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
       TE.toUnion
     )();
 
- generateSasUrl = (
-    options: SB.BlobGenerateSasUrlOptions
-  ): Promise<string> =>
+  generateSasUrl = (options: SB.BlobGenerateSasUrlOptions): Promise<string> =>
     pipe(
       BU.exists(this.primaryBlobClient),
       TE.chain(
@@ -68,7 +66,7 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
       TE.toUnion
     )();
 
- deleteIfExists = (
+  deleteIfExists = (
     options?: SB.BlobDeleteOptions
   ): Promise<SB.BlobDeleteIfExistsResponse> =>
     pipe(
@@ -92,7 +90,7 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
       TE.toUnion
     )();
 
-downloadToBuffer = (
+  downloadToBuffer = (
     offset?: number,
     count?: number,
     options?: SB.BlobDownloadToBufferOptions
@@ -132,7 +130,6 @@ downloadToBuffer = (
       }),
       TE.toUnion
     )();
-
 }
 
 export class BlobClientWithFallback extends StorageBlobClientWithFallback<SB.BlobClient> {
@@ -152,7 +149,10 @@ export class BlockBlobClientWithFallback extends StorageBlobClientWithFallback<S
     super(primaryBlobClient, fallbackBlobClient);
   }
 
-  upload = (body: SB.HttpRequestBody, contentLength: number, options?: SB.BlockBlobUploadOptions): Promise<SB.BlockBlobUploadResponse> => 
-    this.primaryBlobClient.upload(body, contentLength, options)
-
+  upload = (
+    body: SB.HttpRequestBody,
+    contentLength: number,
+    options?: SB.BlockBlobUploadOptions
+  ): Promise<SB.BlockBlobUploadResponse> =>
+    this.primaryBlobClient.upload(body, contentLength, options);
 }

@@ -35,7 +35,7 @@ export class BlobServiceClientWithFallBack {
         O.toUndefined
       )
     );
-  
+
   // see https://github.com/Azure/azure-sdk-for-js/blob/e92fbde81c9c30a831fa2f502e47835381007097/sdk/storage/storage-blob/src/BlobServiceClient.ts#L482
   getContainerClient = (containerName: string) =>
     new BaseContainerClientWithFallback(
