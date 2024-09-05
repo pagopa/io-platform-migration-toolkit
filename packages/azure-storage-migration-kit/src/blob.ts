@@ -79,7 +79,18 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
           this.fallbackBlobClient,
           O.fromNullable,
           O.map((fc) =>
-            TE.tryCatch(() => fc.deleteIfExists(options), E.toError)
+            pipe(
+              TE.tryCatch(() => fc.deleteIfExists(options), E.toError),
+              TE.map((fallbackDelete) =>
+                pipe(
+                  fallbackDelete.succeeded,
+                  B.fold(
+                    () => primaryDelete,
+                    () => fallbackDelete
+                  )
+                )
+              )
+            )
           ),
           O.getOrElse(() => TE.of(primaryDelete))
         )

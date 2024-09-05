@@ -15,7 +15,7 @@ export class BaseContainerClientWithFallback {
     this.fallbackContainerClient = fallbackContainerClient;
   }
 
-  getBlobClient = (blobName: string): BlobClientWithFallback =>
+  public getBlobClient = (blobName: string): BlobClientWithFallback =>
     new BlobClientWithFallback(
       this.primaryContainerClient.getBlobClient(blobName),
       pipe(
@@ -26,7 +26,7 @@ export class BaseContainerClientWithFallback {
       )
     );
 
-  getBlockBlobClient = (blobName: string): BlockBlobClientWithFallback =>
+  public getBlockBlobClient = (blobName: string): BlockBlobClientWithFallback =>
     new BlockBlobClientWithFallback(
       this.primaryContainerClient.getBlockBlobClient(blobName),
       pipe(
