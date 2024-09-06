@@ -5,16 +5,24 @@ import * as E from "fp-ts/Either";
 import * as B from "fp-ts/boolean";
 import * as O from "fp-ts/Option";
 import * as BU from "./utils/blob";
+import { FallbackTracker } from "./types";
+import { consumeFallbackTrackerWithTaskEither } from "./tracking";
 
 type BlobClientType = SB.BlobClient | SB.BlockBlobClient;
 
 export class StorageBlobClientWithFallback<T extends BlobClientType> {
   primaryBlobClient: T;
   fallbackBlobClient?: T;
+  fallbackTracker?: FallbackTracker;
 
-  constructor(primaryBlobClient: T, fallbackBlobClient?: T) {
+  constructor(
+    primaryBlobClient: T,
+    fallbackBlobClient?: T,
+    fallbackTracker?: FallbackTracker
+  ) {
     this.primaryBlobClient = primaryBlobClient;
     this.fallbackBlobClient = fallbackBlobClient;
+    this.fallbackTracker = fallbackTracker;
   }
 
   exists = (): Promise<boolean> =>
@@ -28,7 +36,16 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
               pipe(
                 this.fallbackBlobClient,
                 O.fromNullable,
-                O.map((fc) => BU.exists(fc)),
+                O.map((fc) =>
+                  pipe(
+                    BU.exists(fc),
+                    consumeFallbackTrackerWithTaskEither(
+                      fc.containerName,
+                      fc.name,
+                      this.fallbackTracker
+                    )
+                  )
+                ),
                 O.getOrElse(() => TE.of(exists))
               ),
             () => TE.of(exists)
@@ -52,7 +69,16 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
             pipe(
               this.fallbackBlobClient,
               O.fromNullable,
-              O.map((fc) => BU.generateSasUrl(fc, options)),
+              O.map((fc) =>
+                pipe(
+                  BU.generateSasUrl(fc, options),
+                  consumeFallbackTrackerWithTaskEither(
+                    fc.containerName,
+                    fc.name,
+                    this.fallbackTracker
+                  )
+                )
+              ),
               O.getOrElse(() =>
                 BU.generateSasUrl(this.primaryBlobClient, options)
               )
@@ -81,6 +107,11 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
           O.map((fc) =>
             pipe(
               TE.tryCatch(() => fc.deleteIfExists(options), E.toError),
+              consumeFallbackTrackerWithTaskEither(
+                fc.containerName,
+                fc.name,
+                this.fallbackTracker
+              ),
               TE.map((fallbackDelete) =>
                 pipe(
                   fallbackDelete.succeeded,
@@ -119,9 +150,16 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
               this.fallbackBlobClient,
               O.fromNullable,
               O.map((fc) =>
-                TE.tryCatch(
-                  () => fc.downloadToBuffer(offset, count, options),
-                  E.toError
+                pipe(
+                  TE.tryCatch(
+                    () => fc.downloadToBuffer(offset, count, options),
+                    E.toError
+                  ),
+                  consumeFallbackTrackerWithTaskEither(
+                    fc.containerName,
+                    fc.name,
+                    this.fallbackTracker
+                  )
                 )
               ),
               O.getOrElse(() =>
@@ -146,18 +184,20 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
 export class BlobClientWithFallback extends StorageBlobClientWithFallback<SB.BlobClient> {
   constructor(
     primaryBlobClient: SB.BlobClient,
-    fallbackBlobClient?: SB.BlobClient
+    fallbackBlobClient?: SB.BlobClient,
+    fallbackTracker?: FallbackTracker
   ) {
-    super(primaryBlobClient, fallbackBlobClient);
+    super(primaryBlobClient, fallbackBlobClient, fallbackTracker);
   }
 }
 
 export class BlockBlobClientWithFallback extends StorageBlobClientWithFallback<SB.BlockBlobClient> {
   constructor(
     primaryBlobClient: SB.BlockBlobClient,
-    fallbackBlobClient?: SB.BlockBlobClient
+    fallbackBlobClient?: SB.BlockBlobClient,
+    fallbackTracker?: FallbackTracker
   ) {
-    super(primaryBlobClient, fallbackBlobClient);
+    super(primaryBlobClient, fallbackBlobClient, fallbackTracker);
   }
 
   upload = (
