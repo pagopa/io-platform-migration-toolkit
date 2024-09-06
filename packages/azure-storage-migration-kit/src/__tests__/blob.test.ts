@@ -1,17 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { afterEach, describe, expect, it, vi } from "vitest";
-import * as SB from "@azure/storage-blob";
-import { BlobClientWithFallback } from "../blob";
+import { BlobClientWithFallback, BlockBlobClientWithFallback } from "../blob";
 
 const primaryGenerateSasUrlMock = vi.fn();
 const primaryExistsMock = vi.fn();
 const primaryDownloadToBufferMock = vi.fn();
 const primaryDeleteIfExistsMock = vi.fn();
+const uploadMock = vi.fn();
 const primaryBlobClient = {
   deleteIfExists: primaryDeleteIfExistsMock,
   downloadToBuffer: primaryDownloadToBufferMock,
   exists: primaryExistsMock,
   generateSasUrl: primaryGenerateSasUrlMock,
-} as unknown as SB.BlobClient;
+  upload: uploadMock,
+} as any;
 
 const fallbackGenerateSasUrlMock = vi.fn();
 const fallbackExistsMock = vi.fn();
@@ -22,10 +24,13 @@ const fallbackBlobClient = {
   downloadToBuffer: fallbackDownloadToBufferMock,
   exists: fallbackExistsMock,
   generateSasUrl: fallbackGenerateSasUrlMock,
-} as unknown as SB.BlobClient;
+} as any;
 
 const getBlobClientWithFallback = () =>
   new BlobClientWithFallback(primaryBlobClient, fallbackBlobClient);
+
+const getBlockBlobClientWithFallback = () =>
+  new BlockBlobClientWithFallback(primaryBlobClient, fallbackBlobClient);
 
 afterEach(() => {
   vi.resetAllMocks();
@@ -145,6 +150,60 @@ describe("deleteIfExists", () => {
     );
     getBlobClientWithFallback()
       .deleteIfExists({})
+      .then()
+      .catch((err) => expect(err).toBeDefined());
+  });
+});
+
+describe("downloadToBuffer", () => {
+  it("should download a blob existing on primary storage", async () => {
+    primaryExistsMock.mockResolvedValueOnce(true);
+    primaryDownloadToBufferMock.mockResolvedValueOnce(Buffer.from("Blob"));
+    const result = await getBlobClientWithFallback().downloadToBuffer();
+    expect(result).toBeDefined();
+    expect(primaryBlobClient.exists).toHaveBeenCalled();
+    expect(primaryBlobClient.downloadToBuffer).toHaveBeenCalled();
+    expect(fallbackBlobClient.exists).not.toHaveBeenCalled();
+    expect(fallbackBlobClient.downloadToBuffer).not.toHaveBeenCalled();
+  });
+
+  it("should download a blob existing on fallback storage", async () => {
+    primaryExistsMock.mockResolvedValueOnce(false);
+    fallbackDownloadToBufferMock.mockResolvedValue(Buffer.from("Blob"));
+    const result = await getBlobClientWithFallback().downloadToBuffer();
+    expect(result).toBeDefined();
+    expect(primaryBlobClient.exists).toHaveBeenCalled();
+    expect(primaryBlobClient.downloadToBuffer).not.toHaveBeenCalled();
+    expect(fallbackBlobClient.downloadToBuffer).toHaveBeenCalled();
+  });
+
+  it("should return an error if something goes wrong while downloading a blob", async () => {
+    primaryExistsMock.mockResolvedValueOnce(true);
+    primaryDownloadToBufferMock.mockRejectedValueOnce("Cannot download blob");
+    getBlobClientWithFallback()
+      .deleteIfExists({})
+      .then()
+      .catch((err) => expect(err).toBeDefined());
+  });
+});
+
+describe("upload", () => {
+  it("should upload a blob on primary storage", async () => {
+    uploadMock.mockResolvedValueOnce({});
+    const content = Buffer.from("Blob");
+    const result = await getBlockBlobClientWithFallback().upload(
+      content,
+      content.length
+    );
+    expect(result).toBeDefined();
+    expect(primaryBlobClient.upload).toHaveBeenCalled();
+  });
+
+  it("should return an error if something goes wrong while uploading a blob", async () => {
+    uploadMock.mockRejectedValueOnce("Cannot upload blob");
+    const content = Buffer.from("Blob");
+    getBlockBlobClientWithFallback()
+      .upload(content, content.length)
       .then()
       .catch((err) => expect(err).toBeDefined());
   });
