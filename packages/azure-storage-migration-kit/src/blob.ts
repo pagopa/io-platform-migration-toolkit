@@ -23,6 +23,10 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
     this.primaryBlobClient = primaryBlobClient;
     this.fallbackBlobClient = fallbackBlobClient;
     this.fallbackTracker = fallbackTracker;
+    this.exists.bind(this);
+    this.deleteIfExists.bind(this);
+    this.downloadToBuffer.bind(this);
+    this.generateSasUrl.bind(this);
   }
 
   exists = (): Promise<boolean> =>
@@ -198,6 +202,7 @@ export class BlockBlobClientWithFallback extends StorageBlobClientWithFallback<S
     fallbackTracker?: FallbackTracker
   ) {
     super(primaryBlobClient, fallbackBlobClient, fallbackTracker);
+    this.upload.bind(this);
   }
 
   upload = (

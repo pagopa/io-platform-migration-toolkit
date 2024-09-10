@@ -17,6 +17,9 @@ export class BaseContainerClientWithFallback {
     this.primaryContainerClient = primaryContainerClient;
     this.fallbackContainerClient = fallbackContainerClient;
     this.fallbackTracker = fallbackTracker;
+    this.getBlobClient.bind(this);
+    this.getBlockBlobClient.bind(this);
+    this.uploadBlockBlob.bind(this);
   }
 
   public getBlobClient = (blobName: string): BlobClientWithFallback =>

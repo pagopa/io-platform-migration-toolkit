@@ -14,6 +14,7 @@ export class BlobServiceClientWithFallBack {
   ) {
     this.primaryBlobServiceClient = primaryBlobServiceClient;
     this.fallbackBlobServiceClient = fallbackBlobServiceClient;
+    this.getContainerClient.bind(this);
   }
 
   static fromConnectionString = (
