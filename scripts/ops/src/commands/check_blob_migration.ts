@@ -25,7 +25,7 @@ export default class CheckBlobMigration extends Command {
   public async run(): Promise<void> {
     const { args } = await this.parse(CheckBlobMigration);
 
-    this.log(`Check with arguments ${args}`);
+    this.log(`Test Check with arguments ${args}`);
   }
 }
 
