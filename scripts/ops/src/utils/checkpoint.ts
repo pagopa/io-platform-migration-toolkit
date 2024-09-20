@@ -2,7 +2,6 @@ import { ContainerClient } from "@azure/storage-blob";
 import { toError } from "fp-ts/lib/Either";
 import { constVoid, pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/TaskEither";
-import * as O from "fp-ts/Option";
 import * as t from "io-ts";
 
 export const BlobStorageCheckpoint = t.intersection([

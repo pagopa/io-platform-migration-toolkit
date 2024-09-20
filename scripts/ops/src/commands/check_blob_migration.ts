@@ -1,7 +1,6 @@
 /* eslint-disable no-console */
-import { BlobServiceClient, ContainerClient } from "@azure/storage-blob";
-import { toError } from "fp-ts/lib/Either";
-import { constVoid, pipe } from "fp-ts/lib/function";
+import { BlobServiceClient } from "@azure/storage-blob";
+import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/TaskEither";
 
 import { Args, Command } from "@oclif/core";
