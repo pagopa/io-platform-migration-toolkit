@@ -1,46 +1,82 @@
 /* eslint-disable no-console */
 import { BlobServiceClient, ContainerClient } from "@azure/storage-blob";
 import { toError } from "fp-ts/lib/Either";
-import { pipe } from "fp-ts/lib/function";
+import { constVoid, pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/TaskEither";
-import * as O from "fp-ts/Option";
-import * as RA from "fp-ts/ReadonlyArray";
-import { asyncIteratorToArray, filterAsyncIterator } from "@pagopa/io-functions-commons/dist/src/utils/async";
 
 import { Args, Command } from "@oclif/core";
+import { createContainerClientIfNotExistsOrGet } from "../utils/storage";
+import { getCheckpoint, getSaveBlobCheckpoint } from "../utils/checkpoint";
 
 export default class CheckBlobMigration extends Command {
   public static description = "Check Storage Blob migration status";
 
   // tslint:disable-next-line: readonly-array
-  public static examples = [
-    `$ io-platform-migration-ops check_blob_migration`,
-  ];
+  public static examples = [`$ io-platform-migration-ops check_blob_migration`];
 
   public static args = {
-    statefulStorage: Args.string({ char: "S", description: "Connection string related to storage account used to save progresses and execution results", required: true }),
-    targetStorage: Args.string({ char: "t", description: "Connection string related to target storage account", required: true })
+    id: Args.string({
+      char: "i",
+      description: "Check identifier",
+      required: true,
+    }),
+    statefulStorage: Args.string({
+      char: "s",
+      description:
+        "Connection string related to storage account used to save progresses and execution results",
+      required: true,
+    }),
+    targetStorage: Args.string({
+      char: "t",
+      description: "Connection string related to target storage account",
+      required: true,
+    }),
   };
 
   public async run(): Promise<void> {
     const { args } = await this.parse(CheckBlobMigration);
 
     this.log(`Test Check with arguments ${args}`);
+    const targetClient = BlobServiceClient.fromConnectionString(
+      args.statefulStorage,
+    );
+    const statefulClient = await pipe(
+      createContainerClientIfNotExistsOrGet(
+        BlobServiceClient.fromConnectionString(args.statefulStorage),
+        args.id,
+      ),
+      TE.getOrElse((err) => {
+        this.log(`Cannot initialize stateful client for container ${args.id}`);
+        throw err;
+      }),
+    )();
+    const saveBlobCheckPoint = getSaveBlobCheckpoint(
+      statefulClient,
+      `checkpoint_${targetClient.accountName}`,
+    );
+
+    const checkpoint = await getCheckpoint(
+      statefulClient,
+      `checkpoint_${targetClient.accountName}`,
+    )();
+
+    let skip = true;
+    for await (const container of targetClient.listContainers()) {
+      skip = container.name !== checkpoint?.containerName;
+      if (!skip) {
+        const containerClient = targetClient.getContainerClient(container.name);
+        // passing optional maxPageSize in the page settings
+        let i = 1;
+        for await (const response of containerClient
+          .listBlobsFlat()
+          .byPage({ maxPageSize: 1 })) {
+          for (const blob of response.segment.blobItems) {
+            console.log(`Blob ${i++}: ${blob.name}`);
+
+            await saveBlobCheckPoint(response.continuationToken)();
+          }
+        }
+      }
+    }
   }
 }
-
-const getSaveBlobCheckpoint = (containerClient: ContainerClient, blobName: string) => (blobContinuationToken?: string) => pipe(
-  blobContinuationToken,
-  O.fromNullable,
-  O.map(continuationToken => TE.tryCatch(() => containerClient.uploadBlockBlob(blobName, continuationToken, continuationToken?.length), toError)),
-  O.getOrElseW(() => TE.of(void 0))
-)
-
-const processBlobPage = (saveBlobCheckPoint: ReturnType<typeof getSaveBlobCheckpoint>) => (containerClient: ContainerClient, blobContinuationToken?: string) =>
-  pipe(
-    containerClient.listBlobsFlat().byPage({ continuationToken: blobContinuationToken, maxPageSize: 1 }),
-    pagedIter => TE.tryCatch(() => pagedIter.next(), toError),
-    TE.filterOrElseW(res => !res.done, () => Error("Done")),
-    TE.map(res => ({ continuationToken: res.value.continuationToken, items: res.value.segment.blobItems })),
-    TE.chain(searchRes => saveBlobCheckPoint(searchRes.continuationToken))
-  );
