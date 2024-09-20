@@ -62,7 +62,7 @@ export default class CheckBlobMigration extends Command {
 
     let skip = true;
     for await (const container of targetClient.listContainers()) {
-      skip = container.name !== checkpoint?.containerName;
+      skip = container.name !== checkpoint?.containerName && skip;
       if (!skip) {
         const containerClient = targetClient.getContainerClient(container.name);
         // passing optional maxPageSize in the page settings
