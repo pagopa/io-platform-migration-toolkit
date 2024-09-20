@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import { BlobServiceClient } from "@azure/storage-blob";
+import { BlobServiceClient, ContainerClient } from "@azure/storage-blob";
 import { toError } from "fp-ts/lib/Either";
 import { pipe } from "fp-ts/lib/function";
 import * as TE from "fp-ts/TaskEither";
@@ -18,7 +18,7 @@ export default class CheckBlobMigration extends Command {
   ];
 
   public static args = {
-    statefulStorage: Args.string({ char: "S", description: "Connection string related to storage account used to save progresses and execution results", required: true}),
+    statefulStorage: Args.string({ char: "S", description: "Connection string related to storage account used to save progresses and execution results", required: true }),
     targetStorage: Args.string({ char: "t", description: "Connection string related to target storage account", required: true })
   };
 
@@ -29,26 +29,18 @@ export default class CheckBlobMigration extends Command {
   }
 }
 
-const test = (connString: string, containername: string) =>
-    pipe(
-      BlobServiceClient.fromConnectionString(connString),
-      (client) => client.getContainerClient(containername),
-      (containerClient) => containerClient.listBlobsFlat(),
-      (pagedIter) =>
-        filterAsyncIterator(pagedIter, (blob) =>
-          pipe(
-            blob.objectReplicationSourceProperties,
-            O.fromNullable,
-            O.map(
-              (replicaProps) =>
-                replicaProps.find((p) =>
-                  p.rules.find((r) => r.replicationStatus === "complete")
-                ) === undefined
-            ),
-            O.getOrElse(() => true)
-          )
-        ),
-      (iter) => TE.tryCatch(() => asyncIteratorToArray(iter), toError),
-      TE.map(RA.map((b) => b.name)),
-      TE.toUnion
-    )();
+const getSaveBlobCheckpoint = (containerClient: ContainerClient, blobName: string) => (blobContinuationToken?: string) => pipe(
+  blobContinuationToken,
+  O.fromNullable,
+  O.map(continuationToken => TE.tryCatch(() => containerClient.uploadBlockBlob(blobName, continuationToken, continuationToken?.length), toError)),
+  O.getOrElseW(() => TE.of(void 0))
+)
+
+const processBlobPage = (saveBlobCheckPoint: ReturnType<typeof getSaveBlobCheckpoint>) => (containerClient: ContainerClient, blobContinuationToken?: string) =>
+  pipe(
+    containerClient.listBlobsFlat().byPage({ continuationToken: blobContinuationToken, maxPageSize: 1 }),
+    pagedIter => TE.tryCatch(() => pagedIter.next(), toError),
+    TE.filterOrElseW(res => !res.done, () => Error("Done")),
+    TE.map(res => ({ continuationToken: res.value.continuationToken, items: res.value.segment.blobItems })),
+    TE.chain(searchRes => saveBlobCheckPoint(searchRes.continuationToken))
+  );
