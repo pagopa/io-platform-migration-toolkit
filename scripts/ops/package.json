@@ -50,7 +50,7 @@
     "scripts": {
         "generate:postpack": "rm -f oclif.manifest.json",
         "generate:prepack": "rm -rf lib tsconfig.tsbuildinfo && tsc -b && oclif manifest && oclif readme",
-        "generate": "npm-run-all generate:*",
+        "generate": "npm run generate:prepack && npm run generate:postpack",
         "version": "oclif-dev readme && git add README.md"
     },
     "types": "lib/index.d.ts"

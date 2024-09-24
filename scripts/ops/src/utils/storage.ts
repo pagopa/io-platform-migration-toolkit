@@ -17,7 +17,8 @@ export const createContainerClientIfNotExistsOrGet = (
     TE.map(RA.head),
     TE.chain(
       flow(
-        O.map(() =>
+        O.map(() => TE.of(blobServiceClient.getContainerClient(containerName))),
+        O.getOrElse(() =>
           pipe(
             TE.tryCatch(
               () => blobServiceClient.createContainer(containerName),
@@ -25,9 +26,6 @@ export const createContainerClientIfNotExistsOrGet = (
             ),
             TE.map((response) => response.containerClient),
           ),
-        ),
-        O.getOrElse(() =>
-          TE.of(blobServiceClient.getContainerClient(containerName)),
         ),
       ),
     ),

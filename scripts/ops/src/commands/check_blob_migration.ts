@@ -37,7 +37,7 @@ export default class CheckBlobMigration extends Command {
 
     this.log(`Test Check with arguments ${args}`);
     const targetClient = BlobServiceClient.fromConnectionString(
-      args.statefulStorage,
+      args.targetStorage,
     );
     const statefulClient = await pipe(
       createContainerClientIfNotExistsOrGet(
@@ -51,31 +51,42 @@ export default class CheckBlobMigration extends Command {
     )();
     const saveBlobCheckPoint = getSaveBlobCheckpoint(
       statefulClient,
-      `checkpoint_${targetClient.accountName}`,
+      `checkpoint_${args.id}_${targetClient.accountName}`,
     );
 
     const checkpoint = await getCheckpoint(
       statefulClient,
-      `checkpoint_${targetClient.accountName}`,
+      `checkpoint_${args.id}_${targetClient.accountName}`,
     )();
 
+    this.log(`checkpoint is ${JSON.stringify(checkpoint)}`);
+
     let skip = true;
+    const alreadyVisitedContainers = checkpoint?.alreadyVisitedContainers ?? [];
     for await (const container of targetClient.listContainers()) {
-      skip = container.name !== checkpoint?.containerName && skip;
+
+      skip =
+        alreadyVisitedContainers.includes(container.name) &&
+        (container.name !== checkpoint?.lastContainerName && skip);
       if (!skip) {
+        await saveBlobCheckPoint(alreadyVisitedContainers, container.name)();
         const containerClient = targetClient.getContainerClient(container.name);
         // passing optional maxPageSize in the page settings
         let i = 1;
         for await (const response of containerClient
           .listBlobsFlat()
-          .byPage({ maxPageSize: 1 })) {
+          .byPage({ continuationToken: checkpoint?.continuationToken, maxPageSize: 1 })) {
           for (const blob of response.segment.blobItems) {
-            console.log(`Blob ${i++}: ${blob.name}`);
-
-            await saveBlobCheckPoint(response.continuationToken)();
+            this.log(`Blob ${i++}: ${blob.name}`);
           }
+          await saveBlobCheckPoint(alreadyVisitedContainers, container.name, response.continuationToken)();
         }
+        if (!alreadyVisitedContainers.includes(container.name)){
+          alreadyVisitedContainers.push(container.name);
+        }
+        await saveBlobCheckPoint(alreadyVisitedContainers, container.name)();
       }
     }
+    await saveBlobCheckPoint(alreadyVisitedContainers, "undefined")();
   }
 }
