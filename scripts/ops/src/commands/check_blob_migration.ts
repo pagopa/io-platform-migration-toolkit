@@ -11,7 +11,9 @@ export default class CheckBlobMigration extends Command {
   public static description = "Check Storage Blob migration status";
 
   // tslint:disable-next-line: readonly-array
-  public static examples = [`$ io-platform-migration-ops check_blob_migration test 'DefaultEndpointsProtocol=https;AccountName=foo;AccountKey=bar==;EndpointSuffix=core.windows.net' 'DefaultEndpointsProtocol=https;AccountName=bar;AccountKey=xyz==;EndpointSuffix=core.windows.net'`];
+  public static examples = [
+    `$ io-platform-migration-ops check_blob_migration test 'DefaultEndpointsProtocol=https;AccountName=foo;AccountKey=bar==;EndpointSuffix=core.windows.net' 'DefaultEndpointsProtocol=https;AccountName=bar;AccountKey=xyz==;EndpointSuffix=core.windows.net'`,
+  ];
 
   public static args = {
     id: Args.string({
@@ -63,10 +65,10 @@ export default class CheckBlobMigration extends Command {
     let skip = true;
     const alreadyVisitedContainers = checkpoint?.alreadyVisitedContainers ?? [];
     for await (const container of targetClient.listContainers()) {
-
       skip =
         alreadyVisitedContainers.includes(container.name) &&
-        (container.name !== checkpoint?.lastContainerName && skip);
+        container.name !== checkpoint?.lastContainerName &&
+        skip;
       if (!skip) {
         await saveBlobCheckPoint(alreadyVisitedContainers, container.name)();
         const containerClient = targetClient.getContainerClient(container.name);
@@ -74,13 +76,20 @@ export default class CheckBlobMigration extends Command {
         let i = 1;
         for await (const response of containerClient
           .listBlobsFlat()
-          .byPage({ continuationToken: checkpoint?.continuationToken, maxPageSize: 1 })) {
+          .byPage({
+            continuationToken: checkpoint?.continuationToken,
+            maxPageSize: 1,
+          })) {
           for (const blob of response.segment.blobItems) {
             this.log(`Blob ${i++}: ${blob.name}`);
           }
-          await saveBlobCheckPoint(alreadyVisitedContainers, container.name, response.continuationToken)();
+          await saveBlobCheckPoint(
+            alreadyVisitedContainers,
+            container.name,
+            response.continuationToken,
+          )();
         }
-        if (!alreadyVisitedContainers.includes(container.name)){
+        if (!alreadyVisitedContainers.includes(container.name)) {
           alreadyVisitedContainers.push(container.name);
         }
         await saveBlobCheckPoint(alreadyVisitedContainers, container.name)();
