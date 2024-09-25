@@ -25,7 +25,6 @@ export const getCheckpoint = (
     (blobClient) => TE.tryCatch(() => blobClient.downloadToBuffer(), toError),
     TE.map((buffer) => buffer.toString()),
     TE.chainEitherKW(J.parse),
-    TE.map(_ => {console.log(_); return (_);}),
     TE.chainEitherKW(BlobStorageCheckpoint.decode),
     TE.mapLeft(() => undefined),
     TE.toUnion,

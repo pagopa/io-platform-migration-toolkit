@@ -11,7 +11,7 @@ export default class CheckBlobMigration extends Command {
   public static description = "Check Storage Blob migration status";
 
   // tslint:disable-next-line: readonly-array
-  public static examples = [`$ io-platform-migration-ops check_blob_migration`];
+  public static examples = [`$ io-platform-migration-ops check_blob_migration test 'DefaultEndpointsProtocol=https;AccountName=foo;AccountKey=bar==;EndpointSuffix=core.windows.net' 'DefaultEndpointsProtocol=https;AccountName=bar;AccountKey=xyz==;EndpointSuffix=core.windows.net'`];
 
   public static args = {
     id: Args.string({
@@ -35,7 +35,6 @@ export default class CheckBlobMigration extends Command {
   public async run(): Promise<void> {
     const { args } = await this.parse(CheckBlobMigration);
 
-    this.log(`Test Check with arguments ${args}`);
     const targetClient = BlobServiceClient.fromConnectionString(
       args.targetStorage,
     );
@@ -71,7 +70,7 @@ export default class CheckBlobMigration extends Command {
       if (!skip) {
         await saveBlobCheckPoint(alreadyVisitedContainers, container.name)();
         const containerClient = targetClient.getContainerClient(container.name);
-        // passing optional maxPageSize in the page settings
+
         let i = 1;
         for await (const response of containerClient
           .listBlobsFlat()
