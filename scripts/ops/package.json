@@ -1,5 +1,5 @@
 {
-    "name": "io-platform-migration-toolkit-scripts",
+    "name": "@pagopa/io-platform-migration-toolkit-ops-scripts",
     "description": "IO Platform migration tools operations tool",
     "version": "1.0.0",
     "author": "PagoPA",
@@ -17,7 +17,8 @@
         "dotenv": "^16.4.5",
         "fp-ts": "^2.16.9",
         "globby": "^13.2.0",
-        "io-ts": "^2.2.21"
+        "io-ts": "^2.2.21",
+        "tsup": "^6.6.3"
     },
     "devDependencies": {
         "@oclif/test": "^4.0.9",
@@ -48,6 +49,7 @@
         ]
     },
     "scripts": {
+        "build": "tsup-node && npm run generate",
         "generate:postpack": "rm -f oclif.manifest.json",
         "generate:prepack": "rm -rf lib tsconfig.tsbuildinfo && tsc -b && oclif manifest && oclif readme",
         "generate": "npm run generate:prepack && npm run generate:postpack",

@@ -8,10 +8,11 @@ on:
     branches: ["main"]
     paths:
       - packages/**
+      - scripts/**
   pull_request:
     types: [opened, synchronize]
     paths:
-      - packages/**
+      - scripts/**
   workflow_dispatch: {}
 
 jobs:
