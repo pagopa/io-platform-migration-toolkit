@@ -30,7 +30,7 @@ export default class CheckBlobMigration extends Command {
       required: true,
     }),
     targetStorage: Args.string({
-      char: "t",
+      char: "d",
       description: "Connection string related to target storage account",
       required: true,
     }),
@@ -77,6 +77,7 @@ export default class CheckBlobMigration extends Command {
 
     this.log(`checkpoint is ${JSON.stringify(checkpoint)}`);
 
+    this.log(`Reading blobs with tag ${flags.tagName} equal to ${flags.tagValue}`);
     let skip = true;
     let flagTerm = false;
     const alreadyVisitedContainers = checkpoint?.alreadyVisitedContainers ?? [];
@@ -102,8 +103,9 @@ export default class CheckBlobMigration extends Command {
                 blob.tags,
                 O.fromNullable,
                 O.map((tags) => tags[flags.tagName] !== flags.tagValue),
-                O.getOrElse(() => false),
+                O.getOrElse(() => true),
               );
+
               if (flagTerm) {
                 this.log(`Migration not completed yet!`);
                 break;
