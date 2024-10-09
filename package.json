@@ -18,7 +18,8 @@
     "url": "git+https://github.com/pagopa/io-platform-migration-toolkit.git"
   },
   "workspaces": [
-    "packages/*"
+    "packages/*",
+    "scripts/*"
   ],
   "packageManager": "yarn@3.4.1",
   "devDependencies": {

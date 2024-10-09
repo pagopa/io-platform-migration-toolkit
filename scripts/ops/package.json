@@ -1,0 +1,59 @@
+{
+    "name": "@pagopa/io-platform-migration-toolkit-ops-scripts",
+    "description": "IO Platform migration tools operations tool",
+    "version": "1.0.0",
+    "author": "PagoPA",
+    "bin": {
+        "io-platform-migration-ops": "./bin/run"
+    },
+    "dependencies": {
+        "@azure/storage-blob": "^12.24.0",
+        "@oclif/core": "^4.0.22",
+        "@oclif/plugin-help": "^6.2.11",
+        "@oclif/plugin-plugins": "^5.4.8",
+        "@pagopa/io-functions-commons": "^29.1.2",
+        "chalk": "^5.3.0",
+        "cli-ux": "^6.0.9",
+        "dotenv": "^16.4.5",
+        "fp-ts": "^2.16.9",
+        "globby": "^13.2.0",
+        "io-ts": "^2.2.21",
+        "tsup": "^6.6.3"
+    },
+    "devDependencies": {
+        "@oclif/test": "^4.0.9",
+        "@oclif/tslint": "^3.1.1",
+        "npm-run-all": "^4.1.5",
+        "oclif": "^4.14.34",
+        "prettier": "^3.3.3",
+        "shx": "^0.3.4",
+        "tslint": "^6.1.3",
+        "typescript": "^5.6.2"
+    },
+    "files": [
+        "/bin",
+        "/lib",
+        "/oclif.manifest.json"
+    ],
+    "keywords": [
+        "oclif"
+    ],
+    "license": "MIT",
+    "main": "lib/index.js",
+    "oclif": {
+        "commands": "./lib/commands",
+        "bin": "io-platform-migration-ops",
+        "plugins": [
+            "@oclif/plugin-help",
+            "@oclif/plugin-plugins"
+        ]
+    },
+    "scripts": {
+        "build": "tsup-node && npm run generate",
+        "generate:postpack": "rm -f oclif.manifest.json",
+        "generate:prepack": "rm -rf lib tsconfig.tsbuildinfo && tsc -b && oclif manifest && oclif readme",
+        "generate": "npm run generate:prepack && npm run generate:postpack",
+        "version": "oclif-dev readme && git add README.md"
+    },
+    "types": "lib/index.d.ts"
+}
