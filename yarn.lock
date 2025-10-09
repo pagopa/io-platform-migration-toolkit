@@ -757,6 +757,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/core-auth@npm:^1.10.0, @azure/core-auth@npm:^1.9.0":
+  version: 1.10.1
+  resolution: "@azure/core-auth@npm:1.10.1"
+  dependencies:
+    "@azure/abort-controller": ^2.1.2
+    "@azure/core-util": ^1.13.0
+    tslib: ^2.6.2
+  checksum: 230c1766d4cb3ac7beac45db65bd5e493e1530f6f1d51dc0fd3537f8144e5c9acfed94700fd28c7aee67bab7502e23a1588adc6aa76f918f08fe40b3b007e2a3
+  languageName: node
+  linkType: hard
+
 "@azure/core-auth@npm:^1.3.0, @azure/core-auth@npm:^1.4.0, @azure/core-auth@npm:^1.7.1, @azure/core-auth@npm:^1.7.2, @azure/core-auth@npm:^1.8.0":
   version: 1.8.0
   resolution: "@azure/core-auth@npm:1.8.0"
@@ -783,6 +794,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/core-client@npm:^1.10.1, @azure/core-client@npm:^1.9.4":
+  version: 1.10.1
+  resolution: "@azure/core-client@npm:1.10.1"
+  dependencies:
+    "@azure/abort-controller": ^2.1.2
+    "@azure/core-auth": ^1.10.0
+    "@azure/core-rest-pipeline": ^1.22.0
+    "@azure/core-tracing": ^1.3.0
+    "@azure/core-util": ^1.13.0
+    "@azure/logger": ^1.3.0
+    tslib: ^2.6.2
+  checksum: b1312966ec52dd4c48798bbdffbbd2faf18bc3eea65967a011cc2e4c0988e1135ecb937f91f13927585101941ee3f065f47db609155f2d337edbbad54a8d33b0
+  languageName: node
+  linkType: hard
+
 "@azure/core-http-compat@npm:^2.0.0":
   version: 2.1.2
   resolution: "@azure/core-http-compat@npm:2.1.2"
@@ -806,7 +832,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@azure/core-paging@npm:^1.1.1":
+"@azure/core-paging@npm:^1.1.1, @azure/core-paging@npm:^1.6.2":
   version: 1.6.2
   resolution: "@azure/core-paging@npm:1.6.2"
   dependencies:
@@ -847,12 +873,36 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/core-rest-pipeline@npm:^1.20.0, @azure/core-rest-pipeline@npm:^1.22.0":
+  version: 1.22.1
+  resolution: "@azure/core-rest-pipeline@npm:1.22.1"
+  dependencies:
+    "@azure/abort-controller": ^2.1.2
+    "@azure/core-auth": ^1.10.0
+    "@azure/core-tracing": ^1.3.0
+    "@azure/core-util": ^1.13.0
+    "@azure/logger": ^1.3.0
+    "@typespec/ts-http-runtime": ^0.3.0
+    tslib: ^2.6.2
+  checksum: c1563aaa30bdc012fc11d20bda99538cc90e77059ee7bf9b045aaf2ba188b4d2af0852e3cada652735e3adca5927a72b46073f60ec41d2012b55e3ebe521d47b
+  languageName: node
+  linkType: hard
+
 "@azure/core-tracing@npm:^1.0.0, @azure/core-tracing@npm:^1.0.1, @azure/core-tracing@npm:^1.1.1, @azure/core-tracing@npm:^1.1.2":
   version: 1.1.2
   resolution: "@azure/core-tracing@npm:1.1.2"
   dependencies:
     tslib: ^2.6.2
   checksum: dc4133115051460748e281c80fdf90a6052350e558716f1afef4b3f8973c4fdd93538ba99c58613b390e9013d0c738108a0155e1903bbbdd8f7910a7a3be1c21
+  languageName: node
+  linkType: hard
+
+"@azure/core-tracing@npm:^1.2.0, @azure/core-tracing@npm:^1.3.0":
+  version: 1.3.1
+  resolution: "@azure/core-tracing@npm:1.3.1"
+  dependencies:
+    tslib: ^2.6.2
+  checksum: 549d19af4b9459847947384a38d12566b85f5ffb44ef4e2391d3372865b8e3cc73d7d1738b4652ebca32e498a2e32f4993f0cd2db1a1f938b581f18e686348bb
   languageName: node
   linkType: hard
 
@@ -866,6 +916,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/core-util@npm:^1.12.0, @azure/core-util@npm:^1.13.0":
+  version: 1.13.1
+  resolution: "@azure/core-util@npm:1.13.1"
+  dependencies:
+    "@azure/abort-controller": ^2.1.2
+    "@typespec/ts-http-runtime": ^0.3.0
+    tslib: ^2.6.2
+  checksum: c005e59109757bf0fe4ec099f8454c128fde5947e94dc19a7e709de32908f8c75571ac1e565227ef22a80ad0a0d44b69d0b21ed7b86c922b6dc21d6a21599b12
+  languageName: node
+  linkType: hard
+
 "@azure/core-xml@npm:^1.0.0, @azure/core-xml@npm:^1.4.3":
   version: 1.4.3
   resolution: "@azure/core-xml@npm:1.4.3"
@@ -873,6 +934,16 @@ __metadata:
     fast-xml-parser: ^4.3.2
     tslib: ^2.6.2
   checksum: 0a84fc6998e510945875b8188362ea97c6f456ea26ef05b22f94ec0b1d8112f09ddf61af35233eafed35625d9e9fb157d21a5b5ec6ddea84a2225ca573d2d02b
+  languageName: node
+  linkType: hard
+
+"@azure/core-xml@npm:^1.4.5":
+  version: 1.5.0
+  resolution: "@azure/core-xml@npm:1.5.0"
+  dependencies:
+    fast-xml-parser: ^5.0.7
+    tslib: ^2.8.1
+  checksum: f410724a1aef907589bdd3cb4701dfbfae9658f9a7472c6de79352b5adfd2de31d0fd5a8042e23bb52a9585f96fe133ebd9433662f9e03f41a726cd803539483
   languageName: node
   linkType: hard
 
@@ -911,12 +982,39 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@azure/data-tables@npm:^13.3.1":
+  version: 13.3.1
+  resolution: "@azure/data-tables@npm:13.3.1"
+  dependencies:
+    "@azure/core-auth": ^1.9.0
+    "@azure/core-client": ^1.9.4
+    "@azure/core-paging": ^1.6.2
+    "@azure/core-rest-pipeline": ^1.20.0
+    "@azure/core-tracing": ^1.2.0
+    "@azure/core-util": ^1.12.0
+    "@azure/core-xml": ^1.4.5
+    "@azure/logger": ^1.2.0
+    tslib: ^2.8.1
+  checksum: 43e13e5db18c987149fb44bda244bb2b1f6740c6bbdf9984d27d167b106035549397b57e4487659fa8d592e592f8f59611a63a612ab22693432dd4ea0a734651
+  languageName: node
+  linkType: hard
+
 "@azure/logger@npm:^1.0.0":
   version: 1.1.4
   resolution: "@azure/logger@npm:1.1.4"
   dependencies:
     tslib: ^2.6.2
   checksum: d4bfd83f31afc465689e02ac2d8eb0a1c6573cc47ea3fa18778c5d7d096ee7a4fdc130f00e9d162ec8ed192aeb9a54d5c3ab15bd7a12bbe039d5f594ba0f797b
+  languageName: node
+  linkType: hard
+
+"@azure/logger@npm:^1.2.0, @azure/logger@npm:^1.3.0":
+  version: 1.3.0
+  resolution: "@azure/logger@npm:1.3.0"
+  dependencies:
+    "@typespec/ts-http-runtime": ^0.3.0
+    tslib: ^2.6.2
+  checksum: 2089429ef3eadc6d4d10c5e12f1cf6580587ac0eed5c7107fc621c56927fc162e150e57668e98092d4ba0dc10c6425ee61971dea67e80022fb3906e9c4efc3a6
   languageName: node
   linkType: hard
 
@@ -2316,6 +2414,23 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pagopa/azure-storage-data-table-migration-kit@workspace:packages/azure-storage-data-table-migration-kit":
+  version: 0.0.0-use.local
+  resolution: "@pagopa/azure-storage-data-table-migration-kit@workspace:packages/azure-storage-data-table-migration-kit"
+  dependencies:
+    "@azure/core-client": ^1.10.1
+    "@azure/core-paging": ^1.6.2
+    "@azure/data-tables": ^13.3.1
+    "@pagopa/eslint-config": ^3.0.0
+    "@rushstack/eslint-patch": ^1.2.0
+    eslint: ^8.36.0
+    fp-ts: ^2.13.1
+    prettier: 2.8.4
+    tsup: ^6.6.3
+    typescript: ^5.0.2
+  languageName: unknown
+  linkType: soft
+
 "@pagopa/azure-storage-legacy-migration-kit@workspace:packages/azure-storage-legacy-migration-kit":
   version: 0.0.0-use.local
   resolution: "@pagopa/azure-storage-legacy-migration-kit@workspace:packages/azure-storage-legacy-migration-kit"
@@ -3475,6 +3590,17 @@ __metadata:
     "@typescript-eslint/types": 5.62.0
     eslint-visitor-keys: ^3.3.0
   checksum: 976b05d103fe8335bef5c93ad3f76d781e3ce50329c0243ee0f00c0fcfb186c81df50e64bfdd34970148113f8ade90887f53e3c4938183afba830b4ba8e30a35
+  languageName: node
+  linkType: hard
+
+"@typespec/ts-http-runtime@npm:^0.3.0":
+  version: 0.3.1
+  resolution: "@typespec/ts-http-runtime@npm:0.3.1"
+  dependencies:
+    http-proxy-agent: ^7.0.0
+    https-proxy-agent: ^7.0.0
+    tslib: ^2.6.2
+  checksum: 78f3692eb0de5f1ba83f7ccd2bf5b22f219c6cfd3c244b29e18528e688e917b51bf560b855ebd383c8c6af6622d1ba28b68af5eb4eafb19532cbb10445fee7d6
   languageName: node
   linkType: hard
 
@@ -6056,6 +6182,17 @@ __metadata:
   bin:
     fxparser: src/cli/cli.js
   checksum: 696dc98da46f0f48eb26dfe1640a53043ea64f2420056374e62abbb5e620f092f8df3c3ff3195505a2eefab2057db3bf0ebaac63557f277934f6cce4e7da027c
+  languageName: node
+  linkType: hard
+
+"fast-xml-parser@npm:^5.0.7":
+  version: 5.3.0
+  resolution: "fast-xml-parser@npm:5.3.0"
+  dependencies:
+    strnum: ^2.1.0
+  bin:
+    fxparser: src/cli/cli.js
+  checksum: fec3fad651269ebb908dd91ab90fa86fe28faa8353a81a05ec43682efcead163ff6edb125876dddd3845e53f8a3eb179c65ade8ee8b716bee436ae1151dc16e8
   languageName: node
   linkType: hard
 
@@ -10844,6 +10981,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"strnum@npm:^2.1.0":
+  version: 2.1.1
+  resolution: "strnum@npm:2.1.1"
+  checksum: 566139b218ef13bdde2a69c744852ac41ea167588f624d46c3b3bebb5d1d1775c55bca4702a0ad2a6a66eb4b3b7de4cbbc83e8d40c5835feabebf6f9cc468993
+  languageName: node
+  linkType: hard
+
 "sucrase@npm:^3.20.3":
   version: 3.35.0
   resolution: "sucrase@npm:3.35.0"
@@ -11151,6 +11295,13 @@ __metadata:
   version: 2.7.0
   resolution: "tslib@npm:2.7.0"
   checksum: 1606d5c89f88d466889def78653f3aab0f88692e80bb2066d090ca6112ae250ec1cfa9dbfaab0d17b60da15a4186e8ec4d893801c67896b277c17374e36e1d28
+  languageName: node
+  linkType: hard
+
+"tslib@npm:^2.8.1":
+  version: 2.8.1
+  resolution: "tslib@npm:2.8.1"
+  checksum: e4aba30e632b8c8902b47587fd13345e2827fa639e7c3121074d5ee0880723282411a8838f830b55100cbe4517672f84a2472667d355b81e8af165a55dc6203a
   languageName: node
   linkType: hard
 
