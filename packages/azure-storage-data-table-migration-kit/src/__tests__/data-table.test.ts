@@ -47,7 +47,12 @@ describe("Constructor", () => {
 describe("fromConnectionString", () => {
   it("should throw an error if no connection string is provided", () => {
     expect(() =>
-      CustomTableClient.fromConnectionString("", "", "tableName")
+      CustomTableClient.fromConnectionString(
+        "",
+        "",
+        "oldTableName",
+        "newTableName"
+      )
     ).toThrow("At least one connection string must be provided");
   });
 
@@ -55,7 +60,8 @@ describe("fromConnectionString", () => {
     const client = CustomTableClient.fromConnectionString(
       fakeConnectionString,
       "",
-      "tableName"
+      "oldTableName",
+      "newTableName"
     );
     expect(client).toBeInstanceOf(CustomTableClient);
     expect(client.oldTableClient).toBeDefined();
@@ -66,7 +72,8 @@ describe("fromConnectionString", () => {
     const client = CustomTableClient.fromConnectionString(
       "",
       fakeConnectionString,
-      "tableName"
+      "oldTableName",
+      "newTableName"
     );
     expect(client).toBeInstanceOf(CustomTableClient);
     expect(client.oldTableClient).toBeUndefined();
@@ -77,7 +84,8 @@ describe("fromConnectionString", () => {
     const client = CustomTableClient.fromConnectionString(
       fakeConnectionString,
       fakeConnectionString,
-      "tableName"
+      "oldTableName",
+      "newTableName"
     );
     expect(client).toBeInstanceOf(CustomTableClient);
     expect(client.oldTableClient).toBeDefined();

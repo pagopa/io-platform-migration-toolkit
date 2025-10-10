@@ -48,8 +48,10 @@ export class CustomTableClient {
   static fromConnectionString(
     oldTableConnectionString: string,
     newTableConnectionString: string,
-    tableName: string,
-    options?: TableServiceClientOptions,
+    oldTableName: string,
+    newTableName: string,
+    oldTableOptions?: TableServiceClientOptions,
+    newTableOptions?: TableServiceClientOptions,
     onError?: <T extends object>(error: Error, entity?: T) => void
   ) {
     if (!oldTableConnectionString && !newTableConnectionString) {
@@ -60,15 +62,15 @@ export class CustomTableClient {
       oldTableConnectionString
         ? TableClient.fromConnectionString(
             oldTableConnectionString,
-            tableName,
-            options
+            oldTableName,
+            oldTableOptions
           )
         : undefined,
       newTableConnectionString
         ? TableClient.fromConnectionString(
             newTableConnectionString,
-            tableName,
-            options
+            newTableName,
+            newTableOptions
           )
         : undefined,
       onError
@@ -114,24 +116,19 @@ export class CustomTableClient {
                   (oldTableClient) =>
                     this.getCreateEntityTE(oldTableClient, entity, options)
                 ),
-                TE.fold(
-                  (error) => {
-                    this.onError?.(error, entity);
-                    return TE.right<Error, TableInsertEntityHeaders>({});
-                  },
-                  (res) => TE.right<Error, TableInsertEntityHeaders>(res)
-                )
+                TE.orElseW((error) => {
+                  this.onError?.(error, entity);
+                  return TE.right(void 0);
+                })
               )
             ),
             TE.map(([newRes]) => newRes)
           )
       ),
-      TE.mapLeft((error) => {
+      TE.getOrElse((error) => {
         throw error;
-      }),
-      TE.toUnion,
-      (task) => task()
-    );
+      })
+    )();
 
   listEntities = function <
     T extends Record<string, unknown> = Record<string, unknown>
