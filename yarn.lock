@@ -2426,6 +2426,7 @@ __metadata:
     eslint: ^8.36.0
     fp-ts: ^2.13.1
     prettier: 2.8.4
+    ts-pattern: ^5.8.0
     tsup: ^6.6.3
     typescript: ^5.0.2
   languageName: unknown
@@ -11262,6 +11263,13 @@ __metadata:
   version: 0.1.13
   resolution: "ts-interface-checker@npm:0.1.13"
   checksum: 20c29189c2dd6067a8775e07823ddf8d59a33e2ffc47a1bd59a5cb28bb0121a2969a816d5e77eda2ed85b18171aa5d1c4005a6b88ae8499ec7cc49f78571cb5e
+  languageName: node
+  linkType: hard
+
+"ts-pattern@npm:^5.8.0":
+  version: 5.8.0
+  resolution: "ts-pattern@npm:5.8.0"
+  checksum: 23c240db880b2b3b44518ff6c037a493936a99f7c23569e049c3398a5040b810b1544e53f6f8b690a579a4894061259dbb87a0256559ae3226132a09b9d6937a
   languageName: node
   linkType: hard
 

@@ -18,6 +18,7 @@
     "@azure/core-paging": "^1.6.2",
     "@azure/data-tables": "^13.3.1",
     "fp-ts": "^2.13.1",
+    "ts-pattern": "^5.8.0",
     "tsup": "^6.6.3"
   },
   "devDependencies": {

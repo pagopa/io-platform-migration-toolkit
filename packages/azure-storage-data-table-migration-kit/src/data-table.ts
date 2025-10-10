@@ -21,10 +21,10 @@ import {
 import { PagedAsyncIterableIterator, PageSettings } from "@azure/core-paging";
 import type { OperationOptions } from "@azure/core-client";
 import { pipe } from "fp-ts/lib/function";
-import * as O from "fp-ts/Option";
 import * as TE from "fp-ts/TaskEither";
 import * as AP from "fp-ts/Apply";
 import * as E from "fp-ts/Either";
+import { match, P } from "ts-pattern";
 
 export class CustomTableClient {
   oldTableClient?: TableClient;
@@ -88,34 +88,22 @@ export class CustomTableClient {
   createEntity = async <T extends object>(
     entity: TableEntity<T>,
     options?: OperationOptions
-  ): Promise<TableInsertEntityHeaders> =>
-    pipe(
-      this.newTableClient,
-      O.fromNullable,
-      O.fold(
-        () =>
-          pipe(
-            this.oldTableClient,
-            O.fromNullable,
-            O.map((oldTableClient) =>
-              this.getCreateEntityTE(oldTableClient, entity, options)
-            ),
-            O.getOrElseW(() => {
-              throw new Error("No TableClient available to create entity.");
-            })
-          ),
-        (newTableClient) =>
+  ): Promise<TableInsertEntityHeaders> => {
+    const p = match([this.newTableClient, this.oldTableClient])
+      .with([P.not(undefined), undefined], ([newTableClient]) =>
+        this.getCreateEntityTE(newTableClient, entity, options)
+      )
+      .with([undefined, P.not(undefined)], ([, oldTableClient]) =>
+        this.getCreateEntityTE(oldTableClient, entity, options)
+      )
+      .with(
+        [P.not(undefined), P.not(undefined)],
+        ([newTableClient, oldTableClient]) =>
           pipe(
             AP.sequenceT(TE.ApplicativeSeq)(
               this.getCreateEntityTE(newTableClient, entity, options),
               pipe(
-                this.oldTableClient,
-                O.fromNullable,
-                O.fold(
-                  () => TE.right<Error, TableInsertEntityHeaders>({}),
-                  (oldTableClient) =>
-                    this.getCreateEntityTE(oldTableClient, entity, options)
-                ),
+                this.getCreateEntityTE(oldTableClient, entity, options),
                 TE.orElseW((error) => {
                   this.onError?.(error, entity);
                   return TE.right(void 0);
@@ -124,11 +112,18 @@ export class CustomTableClient {
             ),
             TE.map(([newRes]) => newRes)
           )
-      ),
+      )
+      .otherwise(() =>
+        TE.left(new Error("No TableClient available to create entity."))
+      );
+
+    return await pipe(
+      p,
       TE.getOrElse((error) => {
         throw error;
       })
     )();
+  };
 
   listEntities = function <
     T extends Record<string, unknown> = Record<string, unknown>
