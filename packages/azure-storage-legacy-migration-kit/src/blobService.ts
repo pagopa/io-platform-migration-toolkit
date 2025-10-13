@@ -46,11 +46,27 @@ const consumeFallbackTracker = (
     O.getOrElse(constVoid)
   );
 
+export const doesBlobExistOnDifferentContainerNames = (
+  blobServiceWithFallback: BlobServiceWithFallBack,
+  containerName: string,
+  secondaryContainerName: string,
+  blobName: string,
+  tracker?: FallbackTracker
+) =>
+  doesBlobExist(
+    blobServiceWithFallback,
+    containerName,
+    blobName,
+    tracker,
+    secondaryContainerName
+  );
+
 export const doesBlobExist = (
   blobServiceWithFallback: BlobServiceWithFallBack,
   containerName: string,
   blobName: string,
-  tracker?: FallbackTracker
+  tracker?: FallbackTracker,
+  secondaryContainerName?: string
 ): TE.TaskEither<Error, AS.BlobService.BlobResult> =>
   pipe(
     TE.taskify<Error, AS.BlobService.BlobResult>((cb) =>
@@ -67,11 +83,19 @@ export const doesBlobExist = (
               O.map((fallback) =>
                 pipe(
                   TE.taskify<Error, AS.BlobService.BlobResult>((cb) =>
-                    fallback.doesBlobExist(containerName, blobName, cb)
+                    fallback.doesBlobExist(
+                      secondaryContainerName ?? containerName,
+                      blobName,
+                      cb
+                    )
                   )(),
                   TE.map((res) =>
                     pipe(
-                      consumeFallbackTracker(containerName, blobName, tracker),
+                      consumeFallbackTracker(
+                        secondaryContainerName ?? containerName,
+                        blobName,
+                        tracker
+                      ),
                       () => res
                     )
                   )
@@ -105,12 +129,30 @@ export const upsertBlobFromText = (
     TE.map(O.fromNullable)
   );
 
+export const getBlobAsTextOnDifferentContainerNames = (
+  blobService: BlobServiceWithFallBack,
+  containerName: string,
+  secondaryContainerName: string,
+  blobName: string,
+  options: AS.BlobService.GetBlobRequestOptions = {},
+  tracker?: FallbackTracker
+) =>
+  getBlobAsText(
+    blobService,
+    containerName,
+    blobName,
+    options,
+    tracker,
+    secondaryContainerName
+  );
+
 export const getBlobAsText = (
   blobService: BlobServiceWithFallBack,
   containerName: string,
   blobName: string,
   options: AS.BlobService.GetBlobRequestOptions = {},
-  tracker?: FallbackTracker
+  tracker?: FallbackTracker,
+  secondaryContainerName?: string
 ): TE.TaskEither<Error, O.Option<string>> =>
   pipe(
     // eslint-disable-next-line sonarjs/cognitive-complexity
@@ -132,11 +174,15 @@ export const getBlobAsText = (
                 O.fromNullable,
                 O.map((fallback) =>
                   fallback.getBlobToText(
-                    containerName,
+                    secondaryContainerName ?? containerName,
                     blobName,
                     options,
                     (e, r, ___) => {
-                      consumeFallbackTracker(containerName, blobName, tracker);
+                      consumeFallbackTracker(
+                        secondaryContainerName ?? containerName,
+                        blobName,
+                        tracker
+                      );
                       if (e) {
                         const storageError = e as AS.StorageError;
                         if (
@@ -174,12 +220,12 @@ export const getBlobAsText = (
                   O.fromNullable,
                   O.map((fallback) =>
                     fallback.getBlobToText(
-                      containerName,
+                      secondaryContainerName ?? containerName,
                       blobName,
                       options,
                       (er, re, ___) => {
                         consumeFallbackTracker(
-                          containerName,
+                          secondaryContainerName ?? containerName,
                           blobName,
                           tracker
                         );
@@ -219,12 +265,29 @@ export const getBlobAsText = (
     TE.chain(TE.fromEither)
   );
 
+export const getBlobAsTextsWithErrorOnDifferentContainerName = (
+  blobService: BlobServiceWithFallBack,
+  containerName: string,
+  secondaryContainerName: string,
+  blobName: string,
+  options: AS.BlobService.GetBlobRequestOptions = {},
+  tracker?: FallbackTracker
+) =>
+  getBlobAsTextWithError(
+    blobService,
+    containerName,
+    options,
+    tracker,
+    secondaryContainerName
+  )(blobName);
+
 export const getBlobAsTextWithError =
   (
     blobService: BlobServiceWithFallBack,
     containerName: string,
     options: AS.BlobService.GetBlobRequestOptions = {},
-    tracker?: FallbackTracker
+    tracker?: FallbackTracker,
+    secondaryContainerName?: string
   ) =>
   (blobName: string): TE.TaskEither<AS.StorageError, O.Option<string>> =>
     pipe(
@@ -246,13 +309,13 @@ export const getBlobAsTextWithError =
                       O.fromNullable,
                       O.map((fallback) =>
                         fallback.getBlobToText(
-                          containerName,
+                          secondaryContainerName ?? containerName,
                           blobName,
                           options,
                           (e, r, __) =>
                             pipe(
                               consumeFallbackTracker(
-                                containerName,
+                                secondaryContainerName ?? containerName,
                                 blobName,
                                 tracker
                               ),
@@ -271,6 +334,26 @@ export const getBlobAsTextWithError =
       ),
       constant
     );
+
+export const getBlobAsObjectOnDifferentContainerNames = <A, O, I>(
+  type: t.Type<A, O, I>,
+  blobService: BlobServiceWithFallBack,
+  containerName: string,
+  secondaryContainerName: string,
+  blobName: string,
+  options: AS.BlobService.GetBlobRequestOptions = {},
+  tracker?: FallbackTracker
+) =>
+  getBlobAsObject(
+    type,
+    blobService,
+    containerName,
+    blobName,
+    options,
+    tracker,
+    secondaryContainerName
+  );
+
 /**
  * Get a blob content as a typed (io-ts) object.
  *
@@ -284,14 +367,16 @@ export const getBlobAsObject = async <A, O, I>(
   containerName: string,
   blobName: string,
   options: AS.BlobService.GetBlobRequestOptions = {},
-  tracker?: FallbackTracker
+  tracker?: FallbackTracker,
+  secondaryContainerName?: string
 ): Promise<E.Either<Error, O.Option<A>>> => {
   const errorOrMaybeText = await getBlobAsText(
     blobService,
     containerName,
     blobName,
     options,
-    tracker
+    tracker,
+    secondaryContainerName
   )();
   return pipe(
     errorOrMaybeText,

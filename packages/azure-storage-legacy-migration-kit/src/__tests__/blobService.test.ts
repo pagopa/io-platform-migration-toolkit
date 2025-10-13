@@ -136,6 +136,29 @@ describe("doesBlobExists", () => {
       })
     );
   });
+
+  it("should call secondary blobService with secondaryContainerName", async () => {
+    doesBlobExistsMock.mockImplementationOnce((_, __, cb) =>
+      cb(undefined, {
+        exists: false,
+      })
+    );
+    doesBlobExistsSecondaryMock.mockImplementationOnce((_, __, f) =>
+      f(undefined, {
+        exists: true,
+      })
+    );
+    const res = await doesBlobExist(
+      blobServiceWithFallback,
+      "cont",
+      "blob",
+      trackerFnMock,
+      "secondaryContainer"
+    )();
+    expect(E.isRight(res)).toBeTruthy();
+    expect(trackerFnMock).toHaveBeenCalled();
+    expect(trackerFnMock).toHaveBeenCalledWith("secondaryContainer", "blob");
+  });
 });
 
 describe("upsertBlobFromText", () => {
@@ -310,5 +333,26 @@ describe("getBlobAsText", () => {
         expect(trackerFnMock).toHaveBeenCalledWith("", "");
       })
     );
+  });
+
+  it("should call secondary blob service with secondaryContainerName", async () => {
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    getBlobToTextMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, undefined)
+    );
+    getBlobToTextSecondaryMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, "blobContent")
+    );
+    const res = await getBlobAsText(
+      blobServiceWithFallback,
+      "cont",
+      "blob",
+      {},
+      trackerFnMock,
+      "secondaryContainer"
+    )();
+    expect(E.isRight(res)).toBeTruthy();
+    expect(trackerFnMock).toHaveBeenCalled();
+    expect(trackerFnMock).toHaveBeenCalledWith("secondaryContainer", "blob");
   });
 });
