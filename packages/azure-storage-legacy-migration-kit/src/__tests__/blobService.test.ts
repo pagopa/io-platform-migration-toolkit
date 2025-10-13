@@ -472,3 +472,45 @@ describe("getBlobAsTextOnDifferentContainerNames", () => {
     );
   });
 });
+
+describe("getBlobAsTextsWithErrorOnDifferentContainerName", () => {
+  it("should call getBlobAsTextWithError with two container names", async () => {
+    getBlobToTextMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, undefined)
+    );
+    getBlobToTextSecondaryMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, "blobContent")
+    );
+    const res = await getBlobAsTextOnDifferentContainerNames(
+      blobServiceWithFallback,
+      "primaryContainer",
+      "secondaryContainer",
+      "blobName",
+      {},
+      trackerFnMock
+    )();
+    expect(E.isRight(res)).toBeTruthy();
+
+    expect(getBlobToTextMock).toHaveBeenCalled();
+    expect(getBlobToTextMock).toHaveBeenCalledWith(
+      "primaryContainer",
+      "blobName",
+      {},
+      expect.any(Function)
+    );
+
+    expect(getBlobToTextSecondaryMock).toHaveBeenCalled();
+    expect(getBlobToTextSecondaryMock).toHaveBeenCalledWith(
+      "secondaryContainer",
+      "blobName",
+      {},
+      expect.any(Function)
+    );
+
+    expect(trackerFnMock).toHaveBeenCalled();
+    expect(trackerFnMock).toHaveBeenCalledWith(
+      "secondaryContainer",
+      "blobName"
+    );
+  });
+});

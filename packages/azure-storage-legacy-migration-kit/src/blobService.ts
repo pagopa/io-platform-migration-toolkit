@@ -265,7 +265,7 @@ export const getBlobAsText = (
     TE.chain(TE.fromEither)
   );
 
-export const getBlobAsTextsWithErrorOnDifferentContainerName = (
+export const getBlobAsTextsWithErrorOnDifferentContainerNames = (
   blobService: BlobServiceWithFallBack,
   containerName: string,
   secondaryContainerName: string,
