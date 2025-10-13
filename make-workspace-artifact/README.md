@@ -36,7 +36,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
         with:
           fetch-depth: 2
 
@@ -51,7 +51,7 @@ jobs:
           # optional
           workspace-type: package
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
         with:
           path: ${{ steps.make_artifact.outputs.artifact-path }}
 ```
