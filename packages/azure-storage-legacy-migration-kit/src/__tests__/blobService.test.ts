@@ -139,11 +139,13 @@ describe("doesBlobExists", () => {
   });
 
   it("should call secondary blobService with secondaryContainerName", async () => {
+    // eslint-disable-next-line sonarjs/no-identical-functions
     doesBlobExistsMock.mockImplementationOnce((_, __, cb) =>
       cb(undefined, {
         exists: false,
       })
     );
+    // eslint-disable-next-line sonarjs/no-identical-functions
     doesBlobExistsSecondaryMock.mockImplementationOnce((_, __, f) =>
       f(undefined, {
         exists: true,
@@ -178,12 +180,15 @@ describe("doesBlobExists", () => {
 });
 
 describe("doesBlobExistsOnDifferentContainerNames", () => {
+  // eslint-disable-next-line sonarjs/no-identical-functions
   it("should call doesBlobExists with two container names", async () => {
+    // eslint-disable-next-line sonarjs/no-identical-functions
     doesBlobExistsMock.mockImplementationOnce((_, __, cb) =>
       cb(undefined, {
         exists: false,
       })
     );
+    // eslint-disable-next-line sonarjs/no-identical-functions
     doesBlobExistsSecondaryMock.mockImplementationOnce((_, __, f) =>
       f(undefined, {
         exists: true,
@@ -474,6 +479,7 @@ describe("getBlobAsTextOnDifferentContainerNames", () => {
 });
 
 describe("getBlobAsTextsWithErrorOnDifferentContainerName", () => {
+  // eslint-disable-next-line sonarjs/no-identical-functions
   it("should call getBlobAsTextWithError with two container names", async () => {
     getBlobToTextMock.mockImplementationOnce((_, __, ___, cb) =>
       cb(undefined, undefined)
