@@ -2,6 +2,7 @@ import { TableClient } from "@azure/data-tables";
 import { PagedAsyncIterableIterator } from "@azure/core-paging";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CustomTableClient } from "../data-table";
+import { TableFields } from "../types";
 
 const randomError = "Random error.";
 const notImplementedError = "Method not implemented.";
@@ -38,7 +39,7 @@ const toArray = async <T>(
 
 describe("Constructor", () => {
   it("should throw an error if no TableClient is provided", () => {
-    expect(() => new CustomTableClient()).toThrow(
+    expect(() => new CustomTableClient(() => void 0)).toThrow(
       "At least one TableClient must be provided"
     );
   });
@@ -46,22 +47,19 @@ describe("Constructor", () => {
 
 describe("fromConnectionString", () => {
   it("should throw an error if no connection string is provided", () => {
-    expect(() =>
-      CustomTableClient.fromConnectionString(
-        "",
-        "",
-        "oldTableName",
-        "newTableName"
-      )
-    ).toThrow("At least one connection string must be provided");
+    expect(() => CustomTableClient.fromConnectionString(() => void 0)).toThrow(
+      "At least one table must be provided"
+    );
   });
 
   it("should create a CustomTableClient instance with only old table connection string", () => {
+    const oldTableFields: TableFields = {
+      connectionString: fakeConnectionString,
+      tableName: "oldTableName",
+    };
     const client = CustomTableClient.fromConnectionString(
-      fakeConnectionString,
-      "",
-      "oldTableName",
-      "newTableName"
+      () => void 0,
+      oldTableFields
     );
     expect(client).toBeInstanceOf(CustomTableClient);
     expect(client.oldTableClient).toBeDefined();
@@ -69,11 +67,14 @@ describe("fromConnectionString", () => {
   });
 
   it("should create a CustomTableClient instance with only new table connection string", () => {
+    const newTableFields: TableFields = {
+      connectionString: fakeConnectionString,
+      tableName: "newTableName",
+    };
     const client = CustomTableClient.fromConnectionString(
-      "",
-      fakeConnectionString,
-      "oldTableName",
-      "newTableName"
+      () => void 0,
+      undefined,
+      newTableFields
     );
     expect(client).toBeInstanceOf(CustomTableClient);
     expect(client.oldTableClient).toBeUndefined();
@@ -81,11 +82,18 @@ describe("fromConnectionString", () => {
   });
 
   it("should create a CustomTableClient instance with both connection strings", () => {
+    const oldTableFields: TableFields = {
+      connectionString: fakeConnectionString,
+      tableName: "oldTableName",
+    };
+    const newTableFields: TableFields = {
+      connectionString: fakeConnectionString,
+      tableName: "newTableName",
+    };
     const client = CustomTableClient.fromConnectionString(
-      fakeConnectionString,
-      fakeConnectionString,
-      "oldTableName",
-      "newTableName"
+      () => void 0,
+      oldTableFields,
+      newTableFields
     );
     expect(client).toBeInstanceOf(CustomTableClient);
     expect(client.oldTableClient).toBeDefined();
@@ -105,14 +113,13 @@ describe("createEntity", () => {
       Promise.resolve(entityObj)
     );
 
-    const res = await new CustomTableClient(oldTableClient).createEntity(
-      entityObj
-    );
+    const res = await new CustomTableClient(
+      () => void 0,
+      oldTableClient
+    ).createEntity(entityObj);
 
-    if (res) {
-      expect(res).toEqual(entityObj);
-      expect(createEntityOldTableMock).toHaveBeenCalled();
-    }
+    expect(res).toEqual(entityObj);
+    expect(createEntityOldTableMock).toHaveBeenCalled();
   });
 
   it("should create an entity in the new table (only new table client)", async () => {
@@ -127,13 +134,13 @@ describe("createEntity", () => {
     );
 
     const res = await new CustomTableClient(
+      () => void 0,
       undefined,
       newTableClient
     ).createEntity(entityObj);
-    if (res) {
-      expect(res).toEqual(entityObj);
-      expect(createEntityNewTableMock).toHaveBeenCalled();
-    }
+
+    expect(res).toEqual(entityObj);
+    expect(createEntityNewTableMock).toHaveBeenCalled();
   });
 
   it("should create an entity in both table (both table client)", async () => {
@@ -152,15 +159,14 @@ describe("createEntity", () => {
     );
 
     const res = await new CustomTableClient(
+      () => void 0,
       oldTableClient,
       newTableClient
     ).createEntity(entityObj);
 
-    if (res) {
-      expect(res).toEqual(entityObj);
-      expect(createEntityNewTableMock).toHaveBeenCalled();
-      expect(createEntityOldTableMock).toHaveBeenCalled();
-    }
+    expect(res).toEqual(entityObj);
+    expect(createEntityNewTableMock).toHaveBeenCalled();
+    expect(createEntityOldTableMock).toHaveBeenCalled();
   });
 
   it("should create an entity in new table and raise onError callback (both table client)", async () => {
@@ -180,20 +186,19 @@ describe("createEntity", () => {
 
     const onErrorMock = vi.fn();
     onErrorMock.mockImplementationOnce((error: Error, entity?: object) => {
+      expect(error).toEqual(Error(randomError));
       expect(entity).toEqual(entityObj);
     });
 
     const res = await new CustomTableClient(
+      onErrorMock,
       oldTableClient,
-      newTableClient,
-      onErrorMock
+      newTableClient
     ).createEntity(entityObj);
 
-    if (res) {
-      expect(res).toEqual(entityObj);
-      expect(createEntityNewTableMock).toHaveBeenCalled();
-      expect(onErrorMock).toHaveBeenCalled();
-    }
+    expect(res).toEqual(entityObj);
+    expect(createEntityNewTableMock).toHaveBeenCalled();
+    expect(onErrorMock).toHaveBeenCalled();
   });
 
   it("should get an error immediatly (both table client)", async () => {
@@ -212,9 +217,11 @@ describe("createEntity", () => {
     );
 
     await expect(
-      new CustomTableClient(oldTableClient, newTableClient).createEntity(
-        entityObj
-      )
+      new CustomTableClient(
+        () => void 0,
+        oldTableClient,
+        newTableClient
+      ).createEntity(entityObj)
     ).rejects.toThrow(randomError);
     expect(createEntityOldTableMock).toHaveBeenCalledTimes(0);
   });
@@ -223,14 +230,12 @@ describe("createEntity", () => {
 describe("listEntities", () => {
   it("should get error on byPage not implemented", async () => {
     const res = new CustomTableClient(
+      () => void 0,
       oldTableClient,
       newTableClient
     ).listEntities();
-    if (res) {
-      expect(() => res.byPage()).toThrow(
-        "listEntities: byPage not implemented."
-      );
-    }
+
+    expect(() => res.byPage()).toThrow("listEntities: byPage not implemented.");
   });
 
   it("should list entities in the old table (only old table client)", async () => {
@@ -246,13 +251,15 @@ describe("listEntities", () => {
       }
       return asyncGenerator();
     });
-    const res = new CustomTableClient(oldTableClient).listEntities();
-    if (res) {
-      const results = await toArray(res);
+    const res = new CustomTableClient(
+      () => void 0,
+      oldTableClient
+    ).listEntities();
 
-      expect(results).toHaveLength(1);
-      expect(results.map((r) => r.email)).toContain("email1");
-    }
+    const results = await toArray(res);
+
+    expect(results).toHaveLength(1);
+    expect(results.map((r) => r.email)).toContain("email1");
   });
 
   it("should list entities in the new table (only new table client)", async () => {
@@ -273,14 +280,16 @@ describe("listEntities", () => {
       }
       return asyncGenerator();
     });
-    const res = new CustomTableClient(newTableClient).listEntities();
-    if (res) {
-      const results = await toArray(res);
 
-      expect(results).toHaveLength(2);
-      expect(results.map((r) => r.email)).toContain("email1");
-      expect(results.map((r) => r.email)).toContain("email2");
-    }
+    const res = new CustomTableClient(
+      () => void 0,
+      newTableClient
+    ).listEntities();
+
+    const results = await toArray(res);
+
+    expect(results).toHaveLength(2);
+    expect(results.map((r) => r.email)).toEqual(["email1", "email2"]);
   });
 
   it("should list entities in both table (merge, with new table priority) (both table client)", async () => {
@@ -321,26 +330,25 @@ describe("listEntities", () => {
     });
 
     const res = new CustomTableClient(
+      () => void 0,
       oldTableClient,
       newTableClient
     ).listEntities();
-    if (res) {
-      const results = await toArray(res);
+    const results = await toArray(res);
 
-      expect(results).toHaveLength(3);
-      expect(results.map((r) => r.email)).toContain("email3");
-      expect(results.map((r) => r.email)).toContain("email4");
-      expect(results.map((r) => r.email)).toContain("email2");
-    }
+    expect(results).toHaveLength(3);
+    expect(results.map((r) => r.email)).toEqual(["email3", "email4", "email2"]);
   });
 });
 
 describe("submitTransaction", () => {
   it("submitTransaction not implemented, should generate error", async () => {
     await expect(
-      new CustomTableClient(oldTableClient, newTableClient).submitTransaction(
-        []
-      )
+      new CustomTableClient(
+        () => void 0,
+        oldTableClient,
+        newTableClient
+      ).submitTransaction([])
     ).rejects.toThrow(notImplementedError);
   });
 });
@@ -348,10 +356,11 @@ describe("submitTransaction", () => {
 describe("deleteEntity", () => {
   it("deleteEntity not implemented, should generate error", async () => {
     await expect(
-      new CustomTableClient(oldTableClient, newTableClient).deleteEntity(
-        "pk",
-        "rk"
-      )
+      new CustomTableClient(
+        () => void 0,
+        oldTableClient,
+        newTableClient
+      ).deleteEntity("pk", "rk")
     ).rejects.toThrow(notImplementedError);
   });
 });
@@ -359,7 +368,11 @@ describe("deleteEntity", () => {
 describe("updateEntity", () => {
   it("updateEntity not implemented, should generate error", async () => {
     await expect(
-      new CustomTableClient(oldTableClient, newTableClient).updateEntity({
+      new CustomTableClient(
+        () => void 0,
+        oldTableClient,
+        newTableClient
+      ).updateEntity({
         partitionKey: "pk",
         rowKey: "rk",
       })
@@ -370,7 +383,11 @@ describe("updateEntity", () => {
 describe("upsertEntity", () => {
   it("upsertEntity not implemented, should generate error", async () => {
     await expect(
-      new CustomTableClient(oldTableClient, newTableClient).upsertEntity({
+      new CustomTableClient(
+        () => void 0,
+        oldTableClient,
+        newTableClient
+      ).upsertEntity({
         partitionKey: "pk",
         rowKey: "rk",
       })
@@ -381,7 +398,11 @@ describe("upsertEntity", () => {
 describe("getAccessPolicy", () => {
   it("getAccessPolicy not implemented, should generate error", async () => {
     await expect(
-      new CustomTableClient(oldTableClient, newTableClient).getAccessPolicy()
+      new CustomTableClient(
+        () => void 0,
+        oldTableClient,
+        newTableClient
+      ).getAccessPolicy()
     ).rejects.toThrow(notImplementedError);
   });
 });
@@ -389,7 +410,11 @@ describe("getAccessPolicy", () => {
 describe("setAccessPolicy", () => {
   it("setAccessPolicy not implemented, should generate error", async () => {
     await expect(
-      new CustomTableClient(oldTableClient, newTableClient).setAccessPolicy([])
+      new CustomTableClient(
+        () => void 0,
+        oldTableClient,
+        newTableClient
+      ).setAccessPolicy([])
     ).rejects.toThrow(notImplementedError);
   });
 });

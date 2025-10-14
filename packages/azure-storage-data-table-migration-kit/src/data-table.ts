@@ -16,7 +16,6 @@ import {
   GetAccessPolicyResponse,
   SetAccessPolicyResponse,
   SignedIdentifier,
-  TableServiceClientOptions,
 } from "@azure/data-tables";
 import { PagedAsyncIterableIterator, PageSettings } from "@azure/core-paging";
 import type { OperationOptions } from "@azure/core-client";
@@ -25,16 +24,17 @@ import * as TE from "fp-ts/TaskEither";
 import * as AP from "fp-ts/Apply";
 import * as E from "fp-ts/Either";
 import { match, P } from "ts-pattern";
+import { TableFields } from "./types";
 
 export class CustomTableClient {
   oldTableClient?: TableClient;
   newTableClient?: TableClient;
-  onError?: <T extends object>(error: Error, entity?: T) => void;
+  onError: <T extends object>(error: Error, entity?: T) => void;
 
   constructor(
+    onError: <T extends object>(error: Error, entity?: T) => void,
     oldTableClient?: TableClient,
-    newTableClient?: TableClient,
-    onError?: <T extends object>(error: Error, entity?: T) => void
+    newTableClient?: TableClient
   ) {
     if (!oldTableClient && !newTableClient) {
       throw new Error("At least one TableClient must be provided");
@@ -46,34 +46,30 @@ export class CustomTableClient {
   }
 
   static fromConnectionString(
-    oldTableConnectionString: string,
-    newTableConnectionString: string,
-    oldTableName: string,
-    newTableName: string,
-    oldTableOptions?: TableServiceClientOptions,
-    newTableOptions?: TableServiceClientOptions,
-    onError?: <T extends object>(error: Error, entity?: T) => void
+    onError: <T extends object>(error: Error, entity?: T) => void,
+    oldTableFields?: TableFields,
+    newTableFields?: TableFields
   ) {
-    if (!oldTableConnectionString && !newTableConnectionString) {
-      throw new Error("At least one connection string must be provided");
+    if (!oldTableFields && !newTableFields) {
+      throw new Error("At least one table must be provided");
     }
 
     return new CustomTableClient(
-      oldTableConnectionString
+      onError,
+      oldTableFields
         ? TableClient.fromConnectionString(
-            oldTableConnectionString,
-            oldTableName,
-            oldTableOptions
+            oldTableFields.connectionString,
+            oldTableFields.tableName,
+            oldTableFields.tableOptions
           )
         : undefined,
-      newTableConnectionString
+      newTableFields
         ? TableClient.fromConnectionString(
-            newTableConnectionString,
-            newTableName,
-            newTableOptions
+            newTableFields.connectionString,
+            newTableFields.tableName,
+            newTableFields.tableOptions
           )
-        : undefined,
-      onError
+        : undefined
     );
   }
 
@@ -117,7 +113,7 @@ export class CustomTableClient {
         TE.left(new Error("No TableClient available to create entity."))
       );
 
-    return await pipe(
+    return pipe(
       p,
       TE.getOrElse((error) => {
         throw error;
@@ -125,10 +121,7 @@ export class CustomTableClient {
     )();
   };
 
-  listEntities = function <
-    T extends Record<string, unknown> = Record<string, unknown>
-  >(
-    this: CustomTableClient,
+  listEntities<T extends Record<string, unknown> = Record<string, unknown>>(
     options?: ListTableEntitiesOptions
   ): PagedAsyncIterableIterator<
     TableEntityResult<T>,
@@ -178,7 +171,7 @@ export class CustomTableClient {
     };
 
     return iterator;
-  }.bind(this);
+  }
 
   submitTransaction = (
     _actions: TransactionAction[],
