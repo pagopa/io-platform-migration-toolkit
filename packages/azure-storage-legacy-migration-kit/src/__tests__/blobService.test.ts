@@ -6,6 +6,7 @@ import { pipe } from "fp-ts/lib/function";
 import {
   doesBlobExist,
   getBlobAsText,
+  getBlobAsTextOnDifferentContainerNames,
   upsertBlobFromText,
 } from "../blobService";
 import { BlobNotFoundCode } from "../types";
@@ -135,6 +136,89 @@ describe("doesBlobExists", () => {
         expect(trackerFnMock).toHaveBeenCalledWith("cont", "blob");
       })
     );
+  });
+
+  it("should call secondary blobService with secondaryContainerName", async () => {
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    doesBlobExistsMock.mockImplementationOnce((_, __, cb) =>
+      cb(undefined, {
+        exists: false,
+      })
+    );
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    doesBlobExistsSecondaryMock.mockImplementationOnce((_, __, f) =>
+      f(undefined, {
+        exists: true,
+      })
+    );
+    const res = await doesBlobExist(
+      blobServiceWithFallback,
+      "cont",
+      "blob",
+      trackerFnMock,
+      "secondaryContainer"
+    )();
+    expect(E.isRight(res)).toBeTruthy();
+
+    expect(doesBlobExistsMock).toHaveBeenCalled();
+    expect(doesBlobExistsMock).toHaveBeenCalledWith(
+      "cont",
+      "blob",
+      expect.any(Function)
+    );
+
+    expect(doesBlobExistsSecondaryMock).toHaveBeenCalled();
+    expect(doesBlobExistsSecondaryMock).toHaveBeenCalledWith(
+      "secondaryContainer",
+      "blob",
+      expect.any(Function)
+    );
+
+    expect(trackerFnMock).toHaveBeenCalled();
+    expect(trackerFnMock).toHaveBeenCalledWith("secondaryContainer", "blob");
+  });
+});
+
+describe("doesBlobExistsOnDifferentContainerNames", () => {
+  // eslint-disable-next-line sonarjs/no-identical-functions
+  it("should call doesBlobExists with two container names", async () => {
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    doesBlobExistsMock.mockImplementationOnce((_, __, cb) =>
+      cb(undefined, {
+        exists: false,
+      })
+    );
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    doesBlobExistsSecondaryMock.mockImplementationOnce((_, __, f) =>
+      f(undefined, {
+        exists: true,
+      })
+    );
+    const res = await doesBlobExist(
+      blobServiceWithFallback,
+      "cont",
+      "blob",
+      trackerFnMock,
+      "secondaryContainer"
+    )();
+    expect(E.isRight(res)).toBeTruthy();
+
+    expect(doesBlobExistsMock).toHaveBeenCalled();
+    expect(doesBlobExistsMock).toHaveBeenCalledWith(
+      "cont",
+      "blob",
+      expect.any(Function)
+    );
+
+    expect(doesBlobExistsSecondaryMock).toHaveBeenCalled();
+    expect(doesBlobExistsSecondaryMock).toHaveBeenCalledWith(
+      "secondaryContainer",
+      "blob",
+      expect.any(Function)
+    );
+
+    expect(trackerFnMock).toHaveBeenCalled();
+    expect(trackerFnMock).toHaveBeenCalledWith("secondaryContainer", "blob");
   });
 });
 
@@ -309,6 +393,130 @@ describe("getBlobAsText", () => {
         expect(trackerFnMock).toHaveBeenCalled();
         expect(trackerFnMock).toHaveBeenCalledWith("", "");
       })
+    );
+  });
+
+  it("should call secondary blob service with secondaryContainerName", async () => {
+    // eslint-disable-next-line sonarjs/no-identical-functions
+    getBlobToTextMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, undefined)
+    );
+    getBlobToTextSecondaryMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, "blobContent")
+    );
+    const res = await getBlobAsText(
+      blobServiceWithFallback,
+      "cont",
+      "blob",
+      {},
+      trackerFnMock,
+      "secondaryContainer"
+    )();
+    expect(E.isRight(res)).toBeTruthy();
+
+    expect(getBlobToTextMock).toHaveBeenCalled();
+    expect(getBlobToTextMock).toHaveBeenCalledWith(
+      "cont",
+      "blob",
+      {},
+      expect.any(Function)
+    );
+
+    expect(getBlobToTextSecondaryMock).toHaveBeenCalled();
+    expect(getBlobToTextSecondaryMock).toHaveBeenCalledWith(
+      "secondaryContainer",
+      "blob",
+      {},
+      expect.any(Function)
+    );
+
+    expect(trackerFnMock).toHaveBeenCalled();
+    expect(trackerFnMock).toHaveBeenCalledWith("secondaryContainer", "blob");
+  });
+});
+
+describe("getBlobAsTextOnDifferentContainerNames", () => {
+  // eslint-disable-next-line sonarjs/no-identical-functions
+  it("should call getBlobAsText with two container names", async () => {
+    getBlobToTextMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, undefined)
+    );
+    getBlobToTextSecondaryMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, "blobContent")
+    );
+    const res = await getBlobAsTextOnDifferentContainerNames(
+      blobServiceWithFallback,
+      "primaryContainer",
+      "secondaryContainer",
+      "blobName",
+      {},
+      trackerFnMock
+    )();
+    expect(E.isRight(res)).toBeTruthy();
+
+    expect(getBlobToTextMock).toHaveBeenCalled();
+    expect(getBlobToTextMock).toHaveBeenCalledWith(
+      "primaryContainer",
+      "blobName",
+      {},
+      expect.any(Function)
+    );
+
+    expect(getBlobToTextSecondaryMock).toHaveBeenCalled();
+    expect(getBlobToTextSecondaryMock).toHaveBeenCalledWith(
+      "secondaryContainer",
+      "blobName",
+      {},
+      expect.any(Function)
+    );
+
+    expect(trackerFnMock).toHaveBeenCalled();
+    expect(trackerFnMock).toHaveBeenCalledWith(
+      "secondaryContainer",
+      "blobName"
+    );
+  });
+});
+
+describe("getBlobAsTextsWithErrorOnDifferentContainerName", () => {
+  // eslint-disable-next-line sonarjs/no-identical-functions
+  it("should call getBlobAsTextWithError with two container names", async () => {
+    getBlobToTextMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, undefined)
+    );
+    getBlobToTextSecondaryMock.mockImplementationOnce((_, __, ___, cb) =>
+      cb(undefined, "blobContent")
+    );
+    const res = await getBlobAsTextOnDifferentContainerNames(
+      blobServiceWithFallback,
+      "primaryContainer",
+      "secondaryContainer",
+      "blobName",
+      {},
+      trackerFnMock
+    )();
+    expect(E.isRight(res)).toBeTruthy();
+
+    expect(getBlobToTextMock).toHaveBeenCalled();
+    expect(getBlobToTextMock).toHaveBeenCalledWith(
+      "primaryContainer",
+      "blobName",
+      {},
+      expect.any(Function)
+    );
+
+    expect(getBlobToTextSecondaryMock).toHaveBeenCalled();
+    expect(getBlobToTextSecondaryMock).toHaveBeenCalledWith(
+      "secondaryContainer",
+      "blobName",
+      {},
+      expect.any(Function)
+    );
+
+    expect(trackerFnMock).toHaveBeenCalled();
+    expect(trackerFnMock).toHaveBeenCalledWith(
+      "secondaryContainer",
+      "blobName"
     );
   });
 });
