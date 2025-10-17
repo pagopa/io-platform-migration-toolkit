@@ -27,7 +27,7 @@ jobs:
 
       - name: Create Release Pull Request or Publish to npm
         id: changesets
-        uses: changesets/action@04d574e831923498156e0b2b93152878063203a3
+        uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
         with:
           version: yarn version
           publish: yarn release
