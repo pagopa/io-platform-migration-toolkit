@@ -12,7 +12,7 @@ runs:
       shell: bash
 
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@e33196f7422957bea03ed53f6fbb155025ffc7b8 # v3.7.0
       with:
         node-version-file: ".node-version"
         cache: "yarn"
@@ -24,7 +24,7 @@ runs:
       working-directory: ./out
 
     - name: Restore turbo cache
-      uses: actions/cache@v3
+      uses: actions/cache@d4323d4df104b026a6aa633fdb11d772146be0bf # v4.2.2
       with:
         path: ./out/node_modules/.cache/turbo
         key: ${{ runner.os }}-turbo-${{ github.sha }}

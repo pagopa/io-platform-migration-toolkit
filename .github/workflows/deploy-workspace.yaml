@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout monorepo
-        uses: actions/checkout@v3
+        uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9 # v3.5.3
         with:
           fetch-depth: 2
 
@@ -33,7 +33,7 @@ jobs:
           workspace-name: ${{ inputs.workspace-name }}
 
       - name: Upload workspace artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@694cdabd8bdb0f10b2cea11669e1bf5453eed0a6 # v4.2.0
         with:
           name: ${{ inputs.workspace-name }}
           path: ${{ steps.make_artifact.outputs.artifact-path }}
@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: Download workspace artifact
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@6b208ae046db98c579e8a3aa621ab581ff575935 # v4.1.1
         with:
           name: ${{ inputs.workspace-name }}
 
