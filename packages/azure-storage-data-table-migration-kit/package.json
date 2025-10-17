@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/azure-storage-data-table-migration-kit",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
@@ -25,7 +25,7 @@
     "@rushstack/eslint-patch": "^1.2.0",
     "eslint": "^8.36.0",
     "prettier": "2.8.4",
-    "typescript": "^5.0.2",
-    "tsup": "^6.6.3"
+    "tsup": "^6.6.3",
+    "typescript": "^5.0.2"
   }
 }
