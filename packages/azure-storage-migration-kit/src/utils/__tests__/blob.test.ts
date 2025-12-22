@@ -1,13 +1,15 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as SB from "@azure/storage-blob";
 import * as E from "fp-ts/lib/Either";
-import { downloadToBuffer, exists, generateSasUrl } from "../blob";
+import { download, downloadToBuffer, exists, generateSasUrl } from "../blob";
 
 const generateSasUrlMock = vi.fn();
 const existsMock = vi.fn();
 const downloadToBufferMock = vi.fn();
+const downloadMock = vi.fn();
 const blobClient = {
   downloadToBuffer: downloadToBufferMock,
+  download: downloadMock,
   exists: existsMock,
   generateSasUrl: generateSasUrlMock,
 } as unknown as SB.BlobClient;
@@ -36,6 +38,42 @@ describe("downloadToBuffer", () => {
     const res = await downloadToBuffer(blobClient)();
     if (E.isLeft(res)) {
       expect(res.left).toEqual(Error("Cannot download blob's buffer"));
+    }
+  });
+});
+
+describe("download", () => {
+  it("should return a Blob Download Response Parsed", async () => {
+    const mockResponse: SB.BlobDownloadResponseParsed = {
+      _response: {} as SB.HttpResponse & {
+        parsedHeaders: SB.BlobDownloadHeaders;
+      },
+      readableStreamBody: Buffer.from(
+        aSasUrl
+      ) as unknown as NodeJS.ReadableStream,
+    };
+    const downloadMock = vi.fn().mockResolvedValue(mockResponse);
+    const mockBlobClient = {
+      download: downloadMock,
+    } as unknown as SB.BlobClient;
+
+    const res = await download(mockBlobClient)();
+    if (E.isRight(res)) {
+      expect(res.right).toEqual(mockResponse);
+    }
+  });
+
+  it("should return an error if something goes wrong while downloading", async () => {
+    const downloadMock = vi
+      .fn()
+      .mockRejectedValue("Cannot download blob's content");
+    const mockBlobClient = {
+      download: downloadMock,
+    } as unknown as SB.BlobClient;
+
+    const res = await download(mockBlobClient)();
+    if (E.isLeft(res)) {
+      expect(res.left).toEqual(Error("Cannot download blob's content"));
     }
   });
 });

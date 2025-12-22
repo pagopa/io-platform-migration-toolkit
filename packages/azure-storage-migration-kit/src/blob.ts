@@ -26,6 +26,7 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
     this.exists.bind(this);
     this.deleteIfExists.bind(this);
     this.downloadToBuffer.bind(this);
+    this.download.bind(this);
     this.generateSasUrl.bind(this);
   }
 
@@ -173,6 +174,49 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
                   count,
                   options
                 )
+              )
+            )
+          )
+        )
+      ),
+      TE.mapLeft((err) => {
+        throw err;
+      }),
+      TE.toUnion
+    )();
+
+  download = (
+    offset?: number,
+    count?: number,
+    options?: SB.BlobDownloadOptions
+  ): Promise<SB.BlobDownloadResponseParsed> =>
+    pipe(
+      BU.exists(this.primaryBlobClient),
+      TE.chain(
+        flow(
+          O.fromPredicate((exists) => exists),
+          O.map(() =>
+            BU.download(this.primaryBlobClient, offset, count, options)
+          ),
+          O.getOrElse(() =>
+            pipe(
+              this.fallbackBlobClient,
+              O.fromNullable,
+              O.map((fc) =>
+                pipe(
+                  TE.tryCatch(
+                    () => fc.download(offset, count, options),
+                    E.toError
+                  ),
+                  consumeFallbackTrackerWithTaskEither(
+                    fc.containerName,
+                    fc.name,
+                    this.fallbackTracker
+                  )
+                )
+              ),
+              O.getOrElse(() =>
+                BU.download(this.primaryBlobClient, offset, count, options)
               )
             )
           )
