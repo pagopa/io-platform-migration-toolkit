@@ -58,23 +58,18 @@ describe("download", () => {
     } as unknown as SB.BlobClient;
 
     const res = await download(mockBlobClient)();
-    if (E.isRight(res)) {
-      expect(res.right).toEqual(mockResponse);
-    }
+    expect(res).toMatchObject(E.right(mockResponse));
   });
 
   it("should return an error if something goes wrong while downloading", async () => {
-    const downloadMock = vi
-      .fn()
-      .mockRejectedValue("Cannot download blob's content");
+    const errorMessage = "Cannot download blob's content";
+    const downloadMock = vi.fn().mockRejectedValue(errorMessage);
     const mockBlobClient = {
       download: downloadMock,
     } as unknown as SB.BlobClient;
 
     const res = await download(mockBlobClient)();
-    if (E.isLeft(res)) {
-      expect(res.left).toEqual(Error("Cannot download blob's content"));
-    }
+    expect(res).toMatchObject(E.left(Error(errorMessage)));
   });
 });
 
