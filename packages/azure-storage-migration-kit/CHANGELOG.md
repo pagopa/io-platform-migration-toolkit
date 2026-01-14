@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 0b50079: Add `download` wrapper
+- 0b50079: Add `download` wrapper function
 
 ## 0.0.1
 
