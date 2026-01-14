@@ -26,6 +26,7 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
     this.exists.bind(this);
     this.deleteIfExists.bind(this);
     this.downloadToBuffer.bind(this);
+    this.download.bind(this);
     this.generateSasUrl.bind(this);
   }
 
@@ -136,29 +137,18 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
       TE.toUnion
     )();
 
-  downloadToBuffer = (
-    offset?: number,
-    count?: number,
-    options?: SB.BlobDownloadToBufferOptions
-  ): Promise<Buffer> =>
-    pipe(
+  downloadWithFallback<B>(downloadFn: (client: T) => Promise<B>): Promise<B> {
+    return pipe(
       BU.exists(this.primaryBlobClient),
-      TE.chain(
-        flow(
-          O.fromPredicate((exists) => exists),
-          O.map(() =>
-            BU.downloadToBuffer(this.primaryBlobClient, offset, count, options)
-          ),
-          O.getOrElse(() =>
-            pipe(
+      TE.chain((exists) =>
+        exists
+          ? TE.tryCatch(() => downloadFn(this.primaryBlobClient), E.toError)
+          : pipe(
               this.fallbackBlobClient,
               O.fromNullable,
               O.map((fc) =>
                 pipe(
-                  TE.tryCatch(
-                    () => fc.downloadToBuffer(offset, count, options),
-                    E.toError
-                  ),
+                  TE.tryCatch(() => downloadFn(fc), E.toError),
                   consumeFallbackTrackerWithTaskEither(
                     fc.containerName,
                     fc.name,
@@ -167,22 +157,34 @@ export class StorageBlobClientWithFallback<T extends BlobClientType> {
                 )
               ),
               O.getOrElse(() =>
-                BU.downloadToBuffer(
-                  this.primaryBlobClient,
-                  offset,
-                  count,
-                  options
-                )
+                TE.tryCatch(() => downloadFn(this.primaryBlobClient), E.toError)
               )
             )
-          )
-        )
       ),
       TE.mapLeft((err) => {
         throw err;
       }),
       TE.toUnion
     )();
+  }
+
+  downloadToBuffer = (
+    offset?: number,
+    count?: number,
+    options?: SB.BlobDownloadToBufferOptions
+  ): Promise<Buffer> =>
+    this.downloadWithFallback((client) =>
+      client.downloadToBuffer(offset, count, options)
+    );
+
+  download = (
+    offset?: number,
+    count?: number,
+    options?: SB.BlobDownloadOptions
+  ): Promise<SB.BlobDownloadResponseParsed> =>
+    this.downloadWithFallback((client) =>
+      client.download(offset, count, options)
+    );
 }
 
 export class BlobClientWithFallback extends StorageBlobClientWithFallback<SB.BlobClient> {

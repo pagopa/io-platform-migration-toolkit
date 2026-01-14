@@ -20,3 +20,11 @@ export const downloadToBuffer = (
   options?: SB.BlobDownloadToBufferOptions
 ): TE.TaskEither<Error, Buffer> =>
   TE.tryCatch(() => client.downloadToBuffer(offset, count, options), E.toError);
+
+export const download = (
+  client: SB.BlobClient | SB.BlockBlobClient,
+  offset?: number,
+  count?: number,
+  options?: SB.BlobDownloadOptions
+): TE.TaskEither<Error, SB.BlobDownloadResponseParsed> =>
+  TE.tryCatch(() => client.download(offset, count, options), E.toError);

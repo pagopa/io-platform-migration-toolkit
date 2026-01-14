@@ -5,6 +5,11 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write  # Required for OIDC
+  contents: write   # needed so changesets can push release PRs
+  pull-requests: write
+
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
@@ -22,6 +27,10 @@ jobs:
           node-version-file: ".node-version"
           cache: "yarn"
 
+      # Upgrade npm since trusted publishing requires npm CLI version 11.5.1 or later. 
+      - name: Upgrade npm
+        run: npm install -g npm@^11.5.1
+
       - name: Install dependencies
         run: yarn
 
@@ -33,4 +42,7 @@ jobs:
           publish: yarn release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          # Fix until https://github.com/changesets/action/pull/545 is merged and released.
+          # More context: https://github.com/changesets/action/issues/542
+          NPM_TOKEN: ''
+          NPM_CONFIG_PROVENANCE: false
