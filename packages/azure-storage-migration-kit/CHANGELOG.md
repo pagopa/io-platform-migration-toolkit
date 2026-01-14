@@ -1,5 +1,11 @@
 # @pagopa/azure-storage-migration-kit
 
+## 0.0.2
+
+### Patch Changes
+
+- 0b50079: Add `download` wrapper function
+
 ## 0.0.1
 
 ### Patch Changes
