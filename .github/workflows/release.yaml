@@ -45,3 +45,4 @@ jobs:
           # Fix until https://github.com/changesets/action/pull/545 is merged and released.
           # More context: https://github.com/changesets/action/issues/542
           NPM_TOKEN: ''
+          NPM_CONFIG_PROVENANCE: false
