@@ -9,11 +9,13 @@ on:
     paths:
       - packages/**
       - scripts/**
+      - .node-version
   pull_request:
     types: [opened, synchronize]
     paths:
       - packages/**
       - scripts/**
+      - .node-version
   workflow_dispatch: {}
 
 jobs:
