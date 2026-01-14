@@ -27,10 +27,6 @@ jobs:
           node-version-file: ".node-version"
           cache: "yarn"
 
-      # Upgrade npm since trusted publishing requires npm CLI version 11.5.1 or later. 
-      - name: Upgrade npm
-        run: npm install -g npm@^11.5.1
-
       - name: Install dependencies
         run: yarn
 
