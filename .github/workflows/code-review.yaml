@@ -15,6 +15,7 @@ on:
     paths:
       - packages/**
       - scripts/**
+      - .node-version
   workflow_dispatch: {}
 
 jobs:
