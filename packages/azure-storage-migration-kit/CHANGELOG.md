@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- 8b2cd6e: Set `azure/storage-blob` as peer dependency
+- 8b2cd6e: Setup peer dependencies
 
 ## 0.0.2
 
