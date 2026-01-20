@@ -1,5 +1,11 @@
 # @pagopa/azure-storage-migration-kit
 
+## 0.0.3
+
+### Patch Changes
+
+- 8b2cd6e: Setup peer dependencies
+
 ## 0.0.2
 
 ### Patch Changes
