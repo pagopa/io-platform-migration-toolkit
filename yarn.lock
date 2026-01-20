@@ -2462,6 +2462,10 @@ __metadata:
     prettier: 2.8.4
     tsup: ^6.6.3
     typescript: ^5.0.2
+  peerDependencies:
+    "@azure/storage-blob": ^12.24.0
+    fp-ts: ^2.13.1
+    io-ts: ^2.2.20
   languageName: unknown
   linkType: soft
 
