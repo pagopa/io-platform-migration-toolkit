@@ -4,7 +4,7 @@
 
 ### Patch Changes
 
-- d79242a: Update `package.json` with repository url
+- d79242a: Update `package.json` with repository URL
 
 ## 0.0.3
 
