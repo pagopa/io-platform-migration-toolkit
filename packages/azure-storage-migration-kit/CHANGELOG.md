@@ -1,5 +1,11 @@
 # @pagopa/azure-storage-migration-kit
 
+## 0.0.4
+
+### Patch Changes
+
+- d79242a: Update `package.json` with repository URL
+
 ## 0.0.3
 
 ### Patch Changes
