@@ -15,16 +15,19 @@
   },
   "dependencies": {
     "@azure/core-auth": "^1.7.2",
-    "@azure/storage-blob": "^12.24.0",
     "fp-ts": "^2.13.1",
     "io-ts": "^2.2.20",
     "tsup": "^6.6.3"
   },
   "devDependencies": {
+    "@azure/storage-blob": "^12.24.0",
     "@pagopa/eslint-config": "^3.0.0",
     "@rushstack/eslint-patch": "^1.2.0",
     "eslint": "^8.36.0",
     "prettier": "2.8.4",
     "typescript": "^5.0.2"
+  },
+  "peerDependencies": {
+    "@azure/storage-blob": "^12.24.0"
   }
 }
