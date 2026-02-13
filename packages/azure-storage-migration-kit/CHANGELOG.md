@@ -1,5 +1,11 @@
 # @pagopa/azure-storage-migration-kit
 
+## 0.0.5
+
+### Patch Changes
+
+- a8fe36f: Test NPM publish
+
 ## 0.0.4
 
 ### Patch Changes
