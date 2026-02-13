@@ -56,14 +56,14 @@ jobs:
           name: ${{ inputs.workspace-name }}
 
       - name: Login to Azure
-        uses: azure/login@v1
+        uses: azure/login@cb79c773a3cfa27f31f25eb3f677781210c9ce3d # v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Deploy to ${{ vars.AZURE_WEB_APP_NAME }} staging slot
-        uses: azure/webapps-deploy@v2
+        uses: azure/webapps-deploy@122b7ec46017e53a3f71e3a027d67550a1641f5e # v2
         with:
           resource-group-name: ${{ vars.AZURE_WEB_APP_RESOURCE_GROUP }}
           app-name: ${{ vars.AZURE_WEB_APP_NAME }}
