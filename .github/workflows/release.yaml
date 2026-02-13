@@ -34,6 +34,12 @@ jobs:
       - name: Install dependencies
         run: yarn
 
+      - name: Check npm auth (debug)
+        run: |
+          npm --version
+          npm config get registry
+          npm whoami
+
       - name: Create Release Pull Request or Publish to npm
         id: changesets
         uses: changesets/action@e0145edc7d9d8679003495b11f87bd8ef63c0cba
